@@ -1537,6 +1537,9 @@ document.addEventListener("click", event => {
 
     if (!description && !amountRaw) return null;
     let amount = parseAmount(amountRaw);
+    if (amount !== null && amount > 0 && /debit|paid|payment|sent|withdrawal|purchase/i.test(String(type))) {
+      amount = -Math.abs(amount);
+    }
     if (amount === null) {
       const debit = parseAmount(firstValue(row, ['debit','paid','withdrawal']));
       const credit = parseAmount(firstValue(row, ['credit','received','deposit']));
