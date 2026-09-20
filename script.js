@@ -106,6 +106,21 @@ function render() {
   totalValue.textContent = formatCurrency(total);
   countValue.textContent = expenses.length;
 
+  if (availableValue) {
+    const incomeEntries = loadIncome();
+    const totalIncome = incomeEntries.reduce(
+      (sum, entry) => sum + Number(entry.amount || 0),
+      0
+    );
+    const available = totalIncome - total;
+    availableValue.textContent = formatCurrency(available);
+    if (availableHint) {
+      availableHint.textContent = totalIncome > 0
+        ? (available >= 0 ? "Income minus recorded spending" : "Recorded spending exceeds income")
+        : "Add income to see your available balance";
+    }
+  }
+
   renderAnalytics();
 }
 
