@@ -629,7 +629,7 @@ quickButtons.forEach((button) => {
    ========================================================= */
 (function(){
   const style=document.createElement("style");
-  style.textContent=String.raw\`
+  style.textContent=String.raw`
     .li-shell{margin:0 0 14px;display:grid;gap:12px}
     .li-hero{background:#0a0a0a;color:#fff;border-radius:16px;padding:20px;box-shadow:0 10px 28px rgba(0,0,0,.08)}
     .li-kicker{margin:0 0 6px;font-size:.62rem;letter-spacing:.14em;color:#aaa;font-weight:700}
@@ -650,7 +650,7 @@ quickButtons.forEach((button) => {
     .li-lab{display:grid;grid-template-columns:2fr 1fr;gap:7px}.li-rates{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.li-proj{display:grid;gap:7px;margin-top:11px}.li-scenario{padding:11px;border:1px solid #e2e2e2;border-radius:10px;background:#f6f6f6}.li-scenario.base{background:#0a0a0a;color:#fff;border-color:#0a0a0a}.li-scenario strong{display:block;margin-top:6px;font:600 1rem "SF Mono",monospace}.li-scenario small{display:block;margin-top:4px;color:#767676;font-size:.6rem}.li-scenario.base small{color:#aaa}
     .li-disclaimer{font-size:.62rem;line-height:1.5;color:#888;margin:10px 2px 0}
     @media(max-width:360px){.li-tabs,.li-snapshot{grid-template-columns:1fr}.li-lab,.li-rates,.li-filter{grid-template-columns:1fr}.li-filter .wide{grid-column:auto}}
-  \`;
+  `;
   document.head.appendChild(style);
 
   const funds=[
@@ -679,7 +679,7 @@ quickButtons.forEach((button) => {
   if(!old)return;
   const shell=document.createElement("section");
   shell.className="li-shell";
-  shell.innerHTML=String.raw\`
+  shell.innerHTML=String.raw`
     <div class="li-hero"><p class="li-kicker">LEDGER INTELLIGENCE</p><h2>Your money. Understood.</h2><p>Three local tools for spending decisions, investment research and mathematical planning. No API key or backend required.</p></div>
     <div class="li-tabs">
       <button class="li-tab active" data-li="coach"><b>Money Coach</b><small>Save & understand cash flow.</small></button>
@@ -690,7 +690,7 @@ quickButtons.forEach((button) => {
     <section class="li-panel" data-lipanel="funds" hidden><h3 class="li-title">Research, don't guess.</h3><div class="li-note"><b>Educational research mode.</b> The candidate list is static, not live market data, not a ranking and not a recommendation.</div><div class="li-filter"><label class="wide">Search<input id="liSearch" placeholder="Index, flexi cap, hybrid..."></label><label>Category<select id="liCat"><option>All</option><option>Index</option><option>Flexi Cap</option><option>Hybrid</option><option>Debt</option><option>ELSS</option></select></label><label>Risk lens<select id="liRisk"><option>All</option><option>Lower</option><option>Moderate</option><option>Higher</option></select></label></div><div id="liFunds" class="li-funds"></div></section>
     <section class="li-panel" data-lipanel="lab" hidden><h3 class="li-title">Investment Lab</h3><div class="li-lab"><label>Monthly contribution<input id="liAmt" type="number" min="0" value="5000"></label><label>Years<input id="liYears" type="number" min="1" max="50" value="10"></label></div><div class="li-rates"><label>Lower %<input id="liLow" type="number" min="0" max="50" step=".5" value="6"></label><label>Base %<input id="liBase" type="number" min="0" max="50" step=".5" value="10"></label><label>Higher %<input id="liHigh" type="number" min="0" max="50" step=".5" value="14"></label></div><div id="liProj" class="li-proj"></div><p class="li-disclaimer"><b>Illustrative only.</b> These are mathematical scenarios, not forecasts, expected returns, guarantees or investment advice.</p></section>
     <p class="li-disclaimer">For security-specific personalized advice, use an appropriately authorized service/professional. Verify current scheme documents, costs, tax rules and risk disclosures before acting.</p>
-  \`;
+  `;
   old.insertAdjacentElement("afterend",shell);
 
   function snapshot(){
