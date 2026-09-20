@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ledger 2.0 — Expense Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+  <!-- Money Impact notification -->
+<div id="moneyImpact" class="money-impact" aria-live="polite">
+  <span class="money-impact-label">MONEY IMPACT</span>
+  <strong id="moneyImpactTitle"></strong>
+  <span id="moneyImpactText"></span>
+</div>
+    <header class="app-header">
+      <p class="wordmark">Ledger</p>
+      <h1 class="tagline">Track what you spend, intelligently.</h1>
+    </header>
+
+          <div id="homePage" class="page-section">
+
+   <section class="dashboard" aria-live="polite">
+      <div class="dash-card dash-card--primary">
+        <span class="dash-label">Total spent</span>
+        <span class="dash-value" id="totalValue">₹0.00</span>
+      </div>
+      <div class="dash-card">
+        <span class="dash-label">This month</span>
+        <span class="dash-value" id="dashMonthValue">₹0.00</span>
+      </div>
+      <div class="dash-card">
+        <span class="dash-label">Transactions</span>
+        <span class="dash-value" id="countValue">0</span>
+      </div>
+    </section>
+
+    <section class="entry" aria-labelledby="entry-heading">
+      <h2 id="entry-heading" class="section-heading">Add expense</h2>
+      <form id="expenseForm" class="entry-form">
+        <div class="field">
+          <label for="description">Description</label>
+          <input type="text" id="description" placeholder="Coffee, rent, groceries…" required>
+        </div>
+        <div class="field">
+          <label for="amount">Amount (INR)</label>
+          <div class="amount-input">
+            <span class="currency-prefix" aria-hidden="true">₹</span>
+            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
+          </div>
+        </div>
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category">
+            <option value="Food">Food</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Fuel">Fuel</option>
+            <option value="Bills">Bills</option>
+            <option value="Transport">Transport</option>
+            <option value="Housing">Housing</option>
+            <option value="Leisure">Leisure</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <button type="submit" class="add-btn">Add expense</button>
+      </form>
+    </section>
+
+    <section class="ledger" aria-labelledby="ledger-heading">
+      <h2 id="ledger-heading" class="section-heading">Transactions</h2>
+      <ol id="expenseList" class="expense-list"></ol>
+      <p id="emptyState" class="empty-state">No expenses yet. Add your first one above.</p>
+    </section>
+
+    <section class="analytics" aria-labelledby="analytics-heading">
+      <h2 id="analytics-heading" class="section-heading">This month's analytics</h2>
+
+      <div class="stats-grid">
+        <div class="stat-block">
+          <span class="stat-label">Spent this month</span>
+          <span class="stat-value" id="monthTotal">₹0.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">Transactions</span>
+          <span class="stat-value" id="monthCount">0</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">Average transaction</span>
+          <span class="stat-value" id="monthAverage">₹0.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">Largest expense</span>
+          <span class="stat-value" id="monthLargest">₹0.00</span>
+        </div>
+        <div class="stat-block stat-block--wide">
+          <span class="stat-label">Top category</span>
+          <span class="stat-value" id="monthTopCategory">—</span>
+        </div>
+      </div>
+
+      <h3 class="breakdown-title">By category</h3>
+      <div id="categoryChart" class="category-chart"></div>
+    </section>
+    <section class="ai-card" aria-labelledby="ai-heading">
+
+  <div class="ai-card-content">
+    <span class="ai-card-label">LEDGER AI</span>
+
+    <h2 id="ai-heading">Have a question about your money?</h2>
+
+    <p>
+      Analyse your spending, find savings opportunities,
+      and understand your expenses.
+    </p>
+  </div>
+
+  <a href="ai.html" class="ai-card-btn">
+    Ask Ledger AI →
+  </a>
+
+    </section>
+          </div>        
+    <section id="incomePage" class="page-section" hidden>
+      <div class="money-analysis" id="moneyAnalysis">
+
+  <span class="analysis-label">LEDGER INTELLIGENCE</span>
+
+  <h3>Income vs Spending</h3>
+
+  <div class="analysis-numbers">
+    <div>
+      <small>Income</small>
+      <strong id="analysisIncome">₹0</strong>
+    </div>
+
+    <div>
+      <small>Expenses</small>
+      <strong id="analysisExpense">₹0</strong>
+    </div>
+
+    <div>
+      <small>Available</small>
+      <strong id="analysisAvailable">₹0</strong>
+    </div>
+  </div>
+
+  <div class="analysis-result" id="analysisResult">
+    Add your income and expenses to see your financial position.
+  </div>
+
+      </div>
+
+  <header class="page-header">
+    <span class="page-label">LEDGER INCOME</span>
+    <h2>Track what comes in.</h2>
+    <p>Keep your income organized and see what you have available.</p>
+  </header>
+
+  <div class="income-total-card">
+    <span>Total income</span>
+    <strong id="incomeTotal">₹0.00</strong>
+  </div>
+
+  <form id="incomeForm" class="income-form">
+
+    <div class="field">
+      <label for="incomeSource">Income source</label>
+      <input
+        type="text"
+        id="incomeSource"
+        placeholder="Salary, freelance, business…"
+        required
+      >
+    </div>
+
+    <div class="field">
+      <label for="incomeAmount">Amount (INR)</label>
+      <div class="amount-input">
+        <span class="currency-prefix">₹</span>
+        <input
+          type="number"
+          id="incomeAmount"
+          placeholder="0.00"
+          step="0.01"
+          min="0.01"
+          required
+        >
+      </div>
+    </div>
+
+    <button type="submit" class="add-btn">
+      Add income
+    </button>
+
+  </form>
+
+  <div class="income-list-section">
+    <h3 class="breakdown-title">Income sources</h3>
+    <div id="incomeList" class="income-list"></div>
+  </div>
+
+    </section>
+    <!-- ==========================================================
+         INSIGHTS = INVESTMENT PLANNER
+         Numbers are filled in by script.js (INVESTMENT PLANNER block).
+         ========================================================== -->
+    <section id="insightsPage" class="page-section" hidden>
+
+      <header class="page-header">
+        <span class="page-label">INVESTMENT PLANNER</span>
+        <h2>Turn your monthly surplus into a plan.</h2>
+        <p>Build an educational investment plan based on your income, expenses, goals and risk preferences.</p>
+      </header>
+
+      <!-- 1. Financial snapshot -->
+      <section class="planner-card" aria-labelledby="pl-h-snapshot">
+        <h3 id="pl-h-snapshot" class="planner-title"><span class="planner-step">01</span>Financial snapshot</h3>
+        <div class="stats-grid">
+          <div class="stat-block">
+            <span class="stat-label">Monthly income</span>
+            <span class="stat-value" id="plIncome">₹0</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-label">Monthly expenses</span>
+            <span class="stat-value" id="plExpenses">₹0</span>
+          </div>
+          <div class="stat-block">
+            <span class="stat-label">Monthly surplus</span>
+            <span class="stat-value" id="plSurplus">₹0</span>
+          </div>
+          <div class="stat-block stat-block--dark">
+            <span class="stat-label">Available to invest</span>
+            <span class="stat-value" id="plAvailable">₹0</span>
+          </div>
+        </div>
+        <p class="planner-note" id="plSnapshotNote"></p>
+      </section>
+
+      <!-- 2. Investment amount -->
+      <section class="planner-card" aria-labelledby="pl-h-amount">
+        <h3 id="pl-h-amount" class="planner-title"><span class="planner-step">02</span>Investment amount</h3>
+        <p class="planner-question">How much of your monthly surplus do you want to invest?</p>
+        <div class="opt-row opt-row--5" role="group" aria-label="Share of monthly surplus">
+          <button type="button" class="opt" data-group="percent" data-value="20">20%</button>
+          <button type="button" class="opt" data-group="percent" data-value="40">40%</button>
+          <button type="button" class="opt" data-group="percent" data-value="60">60%</button>
+          <button type="button" class="opt" data-group="percent" data-value="80">80%</button>
+          <button type="button" class="opt opt--wide" data-group="percent" data-value="custom">Custom amount</button>
+        </div>
+        <div class="field" id="plCustomAmountWrap" hidden>
+          <label for="plCustomAmount">Custom monthly amount (INR)</label>
+          <div class="amount-input">
+            <span class="currency-prefix" aria-hidden="true">₹</span>
+            <input type="number" id="plCustomAmount" min="0" step="100" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        <div class="planner-result">
+          <span class="stat-label">Monthly investment</span>
+          <strong id="plAmount">₹0</strong>
+        </div>
+        <p class="planner-note" id="plAmountNote"></p>
+      </section>
+
+      <!-- 3. Goal -->
+      <section class="planner-card" aria-labelledby="pl-h-goal">
+        <h3 id="pl-h-goal" class="planner-title"><span class="planner-step">03</span>Investment goal</h3>
+        <div class="opt-row opt-row--2" role="group" aria-label="Investment goal">
+          <button type="button" class="opt opt--card" data-group="goal" data-value="emergency"><span class="opt-title">Emergency Fund</span></button>
+          <button type="button" class="opt opt--card" data-group="goal" data-value="education"><span class="opt-title">Education</span></button>
+          <button type="button" class="opt opt--card" data-group="goal" data-value="house"><span class="opt-title">House / Car</span></button>
+          <button type="button" class="opt opt--card" data-group="goal" data-value="wealth"><span class="opt-title">Wealth Creation</span></button>
+          <button type="button" class="opt opt--card" data-group="goal" data-value="retirement"><span class="opt-title">Retirement</span></button>
+          <button type="button" class="opt opt--card" data-group="goal" data-value="custom"><span class="opt-title">Custom Goal</span></button>
+        </div>
+        <div class="field" id="plGoalNameWrap" hidden>
+          <label for="plGoalName">Name your goal</label>
+          <input type="text" id="plGoalName" maxlength="40" placeholder="Wedding, travel, business…">
+        </div>
+      </section>
+
+      <!-- 4. Time horizon -->
+      <section class="planner-card" aria-labelledby="pl-h-horizon">
+        <h3 id="pl-h-horizon" class="planner-title"><span class="planner-step">04</span>Time horizon</h3>
+        <div class="opt-row opt-row--2" role="group" aria-label="Time horizon">
+          <button type="button" class="opt" data-group="horizon" data-value="lt3">Less than 3 years</button>
+          <button type="button" class="opt" data-group="horizon" data-value="3to5">3–5 years</button>
+          <button type="button" class="opt" data-group="horizon" data-value="5to10">5–10 years</button>
+          <button type="button" class="opt" data-group="horizon" data-value="10plus">10+ years</button>
+        </div>
+      </section>
+
+      <!-- 5. Risk profile -->
+      <section class="planner-card" aria-labelledby="pl-h-risk">
+        <h3 id="pl-h-risk" class="planner-title"><span class="planner-step">05</span>Risk profile</h3>
+        <div class="opt-row opt-row--1" role="group" aria-label="Risk profile">
+          <button type="button" class="opt opt--card" data-group="risk" data-value="conservative">
+            <span class="opt-title">Conservative</span>
+            <span class="opt-desc">Prioritises lower volatility and capital preservation.</span>
+          </button>
+          <button type="button" class="opt opt--card" data-group="risk" data-value="moderate">
+            <span class="opt-title">Moderate</span>
+            <span class="opt-desc">Balances growth potential with risk management.</span>
+          </button>
+          <button type="button" class="opt opt--card" data-group="risk" data-value="growth">
+            <span class="opt-title">Growth</span>
+            <span class="opt-desc">Accepts higher volatility for greater long-term growth potential.</span>
+          </button>
+          <button type="button" class="opt opt--card" data-group="risk" data-value="aggressive">
+            <span class="opt-title">Aggressive</span>
+            <span class="opt-desc">Accepts substantial market volatility for higher long-term growth potential.</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 6. Emergency fund -->
+      <section class="planner-card" aria-labelledby="pl-h-reserve">
+        <h3 id="pl-h-reserve" class="planner-title"><span class="planner-step">06</span>Emergency fund</h3>
+        <p class="planner-question">How many months of expenses should your reserve cover?</p>
+        <div class="opt-row opt-row--3" role="group" aria-label="Emergency reserve months">
+          <button type="button" class="opt" data-group="reserve" data-value="3">3 months</button>
+          <button type="button" class="opt" data-group="reserve" data-value="6">6 months</button>
+          <button type="button" class="opt" data-group="reserve" data-value="9">9 months</button>
+        </div>
+        <div class="field">
+          <label for="plReserveSaved">Emergency savings you already have (INR)</label>
+          <div class="amount-input">
+            <span class="currency-prefix" aria-hidden="true">₹</span>
+            <input type="number" id="plReserveSaved" min="0" step="1000" inputmode="decimal" placeholder="0">
+          </div>
+        </div>
+        <div class="planner-result">
+          <span class="stat-label">Emergency fund target</span>
+          <strong id="plReserveTarget">₹0</strong>
+        </div>
+        <div class="progress" aria-hidden="true"><span id="plReserveBar" class="progress-fill"></span></div>
+        <p class="planner-note" id="plReserveNote"></p>
+      </section>
+
+      <!-- 7. Allocation -->
+      <section class="planner-card" aria-labelledby="pl-h-alloc">
+        <h3 id="pl-h-alloc" class="planner-title"><span class="planner-step">07</span>Your illustrative allocation</h3>
+        <div id="plAllocation" class="alloc-list"></div>
+        <p class="planner-note" id="plAllocationNote"></p>
+      </section>
+
+      <!-- 8. Projection -->
+      <section class="planner-card" aria-labelledby="pl-h-proj">
+        <h3 id="pl-h-proj" class="planner-title"><span class="planner-step">08</span>Projected value</h3>
+        <p class="planner-question">Illustrative projection — not a guaranteed return.</p>
+
+        <div class="proj-inputs">
+          <div class="field">
+            <label for="plProjMonthly">Monthly investment</label>
+            <div class="amount-input">
+              <span class="currency-prefix" aria-hidden="true">₹</span>
+              <input type="number" id="plProjMonthly" min="0" step="100" inputmode="decimal" placeholder="0">
+            </div>
+          </div>
+          <div class="field">
+            <label for="plProjYears">Years</label>
+            <input type="number" id="plProjYears" min="1" max="50" step="1" inputmode="numeric" placeholder="10">
+          </div>
+        </div>
+
+        <p class="planner-label">Illustrative annual return assumptions (% p.a.)</p>
+        <div class="rate-inputs">
+          <div class="field"><label for="plRateLower">Lower</label><input type="number" id="plRateLower" min="0" max="30" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label for="plRateBase">Base</label><input type="number" id="plRateBase" min="0" max="30" step="0.1" inputmode="decimal"></div>
+          <div class="field"><label for="plRateHigher">Higher</label><input type="number" id="plRateHigher" min="0" max="30" step="0.1" inputmode="decimal"></div>
+        </div>
+        <p class="planner-note">Suggested assumptions are worked out from your allocation using hypothetical per-asset rates. They are not forecasts, and you can edit them.</p>
+        <button type="button" class="ghost-btn" id="plResetProjection">Reset to plan</button>
+
+        <div id="plProjection" class="proj-list"></div>
+
+        <p class="planner-disclaimer">Ledger provides educational calculations and illustrative scenarios, not personalised financial advice. Investments involve market risk and past performance does not guarantee future results.</p>
+      </section>
+
+      <!-- 9/10. Market & fund research -->
+      <section class="planner-card" aria-labelledby="pl-h-research">
+        <h3 id="pl-h-research" class="planner-title"><span class="planner-step">09</span>Market &amp; fund research</h3>
+        <p class="data-banner" id="fundBanner">Loading…</p>
+
+        <div class="filters">
+          <div class="field filters-search">
+            <label for="fundSearch">Search</label>
+            <input type="search" id="fundSearch" placeholder="Name or benchmark" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="fundCategory">Category</label>
+            <select id="fundCategory">
+              <option value="all">All categories</option>
+              <option value="Mutual Funds">Mutual Funds</option>
+              <option value="Index Funds">Index Funds</option>
+              <option value="Debt Funds">Debt Funds</option>
+              <option value="Gold">Gold</option>
+              <option value="Stocks">Stocks</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fundRisk">Risk</label>
+            <select id="fundRisk">
+              <option value="all">All risk levels</option>
+              <option value="Low">Low</option>
+              <option value="Moderate">Moderate</option>
+              <option value="High">High</option>
+              <option value="Very High">Very high</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="fundPeriod">Time period</label>
+            <select id="fundPeriod">
+              <option value="r1">1 year</option>
+              <option value="r3" selected>3 years</option>
+              <option value="r5">5 years</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="planner-note" id="fundCount"></p>
+        <div id="fundList" class="fund-list"></div>
+        <p class="planner-disclaimer">Listed alphabetically for comparison — this is not a ranking or a recommendation. Historical returns do not indicate future results.</p>
+      </section>
+
+      <!-- 11. Financial insight -->
+      <section class="planner-card planner-card--dark" aria-labelledby="pl-h-insight">
+        <h3 id="pl-h-insight" class="planner-title"><span class="planner-step">10</span>Financial insight</h3>
+        <ul id="plInsights" class="insight-list"></ul>
+      </section>
+
+      <p class="planner-disclaimer planner-disclaimer--page">Educational planning tool. Market investments carry risk and actual returns may vary.</p>
+
+    </section>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+
+  <button class="nav-btn active" data-page="home">
+    <span>⌂</span>
+    <small>Home</small>
+  </button>
+
+  <button class="nav-btn" data-page="income">
+    <span>₹</span>
+    <small>Income</small>
+  </button>
+
+  <button class="nav-btn" data-page="insights">
+    <span>◈</span>
+    <small>Insights</small>
+  </button>
+
+  <button class="nav-btn" data-page="ai">
+    <span>✦</span>
+    <small>AI</small>
+  </button>
+
+      </nav>
+      
+    <footer class="app-footer">
+      <button id="clearBtn" class="clear-btn" type="button">Clear all</button>
+      <span class="version-tag">Ledger 2.0</span>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+      
+
+        
