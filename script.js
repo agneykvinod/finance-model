@@ -1346,11 +1346,6 @@ updateMoneyAnalysis();
    One visibility system for every page: the HTML `hidden` property.
 ========================================= */
 
-const navButtons = document.querySelectorAll(".nav-btn");
-const pages = document.querySelectorAll(".page-section");
-
-// Which section each nav button shows (data-page value -> element id).
-// "ai" is deliberately not listed: it opens the separate ai.html page instead.
 const PAGE_IDS = {
   home: "homePage",
   income: "incomePage",
@@ -1358,53 +1353,60 @@ const PAGE_IDS = {
   health: "healthPage",
 };
 
-navButtons.forEach(button => {
-  button.addEventListener("click", () => {
+function openLedgerPage(pageName, button) {
+  if (pageName === "ai") {
+    window.location.href = "ai.html";
+    return;
+  }
 
-    const pageName = button.dataset.page;
+  const selectedPage = document.getElementById(PAGE_IDS[pageName]);
+  if (!selectedPage) {
+    console.error("Ledger: page not found:", pageName);
+    return;
+  }
 
-    // Ledger AI is its own page.
-    if (pageName === "ai") {
-      window.location.href = "ai.html";
-      return;
-    }
+  document.querySelectorAll(".page-section").forEach(page => {
+    page.hidden = true;
+  });
+  selectedPage.hidden = false;
 
-    // Only switch if the target section really exists, so the current
-    // page is never hidden without something to show in its place.
-    const selectedPage = document.getElementById(PAGE_IDS[pageName]);
-    if (!selectedPage) return;
+  document.querySelectorAll(".nav-btn").forEach(btn => {
+    btn.classList.remove("active");
+    btn.removeAttribute("aria-current");
+  });
 
-    pages.forEach(page => { page.hidden = true; });
-    selectedPage.hidden = false;
-
-    navButtons.forEach(btn => {
-      btn.classList.remove("active");
-      btn.removeAttribute("aria-current");
-    });
+  if (button) {
     button.classList.add("active");
     button.setAttribute("aria-current", "page");
+  }
 
-    // Refresh page-specific numbers every time the page is opened.
-    if (pageName === "income") {
-      updateMoneyAnalysis();
+  if (pageName === "income") {
+    updateMoneyAnalysis();
+  }
+
+  if (pageName === "health") {
+    if (window.LedgerHealth && typeof window.LedgerHealth.render === "function") {
+      window.LedgerHealth.render();
     }
+  }
 
-    if (pageName === "health" && window.LedgerHealth) {
-      try {
-        window.LedgerHealth.render();
-      } catch (err) {
-        console.error("Could not refresh Money Health:", err);
-      }
+  if (pageName === "insights" && window.LedgerPlanner) {
+    try {
+      window.LedgerPlanner.render();
+    } catch (err) {
+      console.error("Could not refresh the investment planner:", err);
     }
+  }
 
-    if (pageName === "insights" && window.LedgerPlanner) {
-      try {
-        window.LedgerPlanner.render();
-      } catch (err) {
-        console.error("Could not refresh the investment planner:", err);
-      }
-    }
+  window.scrollTo(0, 0);
+}
 
-    window.scrollTo(0, 0);
-  });
+// Delegated navigation keeps the buttons working even if the nav is
+// re-rendered or the page structure changes later.
+document.addEventListener("click", event => {
+  const button = event.target.closest(".nav-btn");
+  if (!button) return;
+  event.preventDefault();
+  openLedgerPage(button.dataset.page, button);
 });
+
