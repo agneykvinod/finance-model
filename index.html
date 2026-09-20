@@ -73,6 +73,43 @@
       </form>
     </section>
 
+
+
+    <section class="import-card" aria-labelledby="gpay-import-heading">
+      <div class="import-card-head">
+        <div>
+          <span class="page-label">GOOGLE PAY IMPORT</span>
+          <h2 id="gpay-import-heading">Bring your payments into Ledger.</h2>
+          <p>Export your Google Pay statement and import it here. Everything is processed in this browser — no account connection or backend required.</p>
+        </div>
+        <span class="import-badge">LOCAL ONLY</span>
+      </div>
+
+      <label class="import-dropzone" for="gpayFile">
+        <span class="import-drop-icon">↑</span>
+        <strong>Choose a statement file</strong>
+        <small>CSV, TXT or JSON · nothing is uploaded</small>
+        <input id="gpayFile" type="file" accept=".csv,.txt,.json,text/csv,text/plain,application/json">
+      </label>
+
+      <div class="import-divider"><span>OR</span></div>
+
+      <label class="field import-paste-field" for="gpayPaste">
+        <span>Paste statement text</span>
+        <textarea id="gpayPaste" rows="4" placeholder="Paste transaction rows copied from your statement…"></textarea>
+      </label>
+
+      <div class="import-actions">
+        <button type="button" class="add-btn" id="gpayImportBtn">Import transactions</button>
+        <button type="button" class="ghost-btn" id="gpaySampleBtn">Try sample</button>
+      </div>
+
+      <div id="gpayImportStatus" class="import-status" aria-live="polite"></div>
+      <div id="gpayImportPreview" class="import-preview" hidden></div>
+
+      <p class="planner-disclaimer">Ledger does not connect to or log into Google Pay. Review imported transactions before relying on your totals. Duplicate rows are automatically skipped when the same transaction is already in Ledger.</p>
+    </section>
+
     <section class="ledger" aria-labelledby="ledger-heading">
       <h2 id="ledger-heading" class="section-heading">Transactions</h2>
       <ol id="expenseList" class="expense-list"></ol>
