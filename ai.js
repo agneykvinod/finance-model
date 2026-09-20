@@ -718,3 +718,80 @@ quickButtons.forEach((button) => {
   ["liAmt","liYears","liLow","liBase","liHigh"].forEach(id=>document.getElementById(id).addEventListener("input",renderLab));
   snapshot();renderFunds();renderLab();
 })();
+/* =========================================================
+   CHAT RENDER FIX
+   ========================================================= */
+(function(){
+  function appendLedgerMessage(text, sender){
+    const box=document.getElementById("chatMessages");
+    if(!box) return;
+    const wrap=document.createElement("div");
+    wrap.className="message "+(sender==="user"?"user-message":"assistant-message");
+    const label=document.createElement("div");
+    label.className="message-label";
+    label.textContent=sender==="user"?"You":"Ledger AI";
+    const bubble=document.createElement("div");
+    bubble.className="message-bubble";
+    bubble.textContent=String(text);
+    wrap.appendChild(label);
+    wrap.appendChild(bubble);
+    box.appendChild(wrap);
+    box.scrollTop=box.scrollHeight;
+  }
+
+  function localAnswer(q){
+    const s=q.toLowerCase();
+    const data=(()=>{
+      try{return JSON.parse(localStorage.getItem("ledger.expenses")||"[]")}catch(e){return[]}
+    })();
+    const income=(()=>{
+      try{return JSON.parse(localStorage.getItem("ledger.income")||"[]")}catch(e){return[]}
+    })();
+    const now=new Date();
+    const month=data.filter(x=>{const d=new Date(x.date);return !isNaN(d)&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+    const total=month.reduce((a,x)=>a+Number(x.amount||0),0);
+    const inc=income.filter(x=>{const d=new Date(x.date);return !isNaN(d)&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+    const it=(inc.length?inc:income).reduce((a,x)=>a+Number(x.amount||0),0);
+    const money=n=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(n||0);
+    if(/how.*save|saving|save money|reduce|cut/.test(s)){
+      const surplus=it-total;
+      if(it<=0)return"Add your income in Ledger first. Then I can calculate a realistic saving target from your actual cash flow.";
+      if(surplus<=0)return"Your recorded spending is "+money(Math.abs(surplus))+" above income. Start by reviewing your largest category and reducing flexible spending before increasing investments.";
+      return"Your recorded surplus is "+money(surplus)+". A practical first target could be to protect part of that surplus each month, then review your largest spending category for reductions.";
+    }
+    if(/where|most|biggest|highest/.test(s)){
+      const cats={};month.forEach(x=>cats[x.category||"Other"]=(cats[x.category||"Other"]||0)+Number(x.amount||0));
+      const top=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0];
+      return top?"Your largest current-month category is "+top[0]+" at "+money(top[1])+".":"There are no current-month expenses to analyse yet.";
+    }
+    if(/how much.*spend|spent/.test(s))return"You recorded "+money(total)+" of spending this month across "+month.length+" transactions.";
+    if(/invest|sip/.test(s)){
+      const surplus=it-total;
+      return surplus>0?"Your recorded monthly surplus is "+money(surplus)+". You can use part of this for goal-based investing after considering your emergency reserve, time horizon and risk tolerance.":"Your recorded cash flow does not currently show a positive surplus, so review spending/income before increasing investments.";
+    }
+    if(/summary|overview|financial/.test(s))return"Current month: income "+money(it)+", spending "+money(total)+", surplus "+money(it-total)+", transactions "+month.length+".";
+    return"Try asking: “How can I save money?”, “Where do I spend the most?”, “How much can I invest?”, or “Give me a financial summary.”";
+  }
+
+  function sendLedgerQuestion(q){
+    q=String(q||"").trim();
+    if(!q)return;
+    appendLedgerMessage(q,"user");
+    setTimeout(()=>appendLedgerMessage(localAnswer(q),"assistant"),120);
+  }
+
+  const form=document.getElementById("chatForm");
+  const input=document.getElementById("chatInput");
+  if(form && input){
+    form.addEventListener("submit",function(e){
+      e.preventDefault();
+      const q=input.value.trim();
+      input.value="";
+      sendLedgerQuestion(q);
+    });
+  }
+
+  document.querySelectorAll(".quick-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>sendLedgerQuestion(btn.dataset.question||btn.textContent));
+  });
+})();
