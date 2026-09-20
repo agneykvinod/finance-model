@@ -295,8 +295,6 @@ clearBtn.addEventListener('click', () => {
   }
 });
 
-render();
-
 /* =================================
    INCOME + INCOME vs SPENDING
 ================================= */
@@ -419,6 +417,7 @@ incomeListEl.addEventListener('click', (event) => {
 
 renderIncome();
 updateMoneyAnalysis();
+render();
 
 /* =========================================
    INVESTMENT PLANNER  (Insights page)
