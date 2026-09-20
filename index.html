@@ -17,13 +17,18 @@
 </div>
     <header class="app-header">
       <p class="wordmark">Ledger</p>
-      <h1 class="tagline">Track what you spend, intelligently.</h1>
+      <h1 class="tagline">Know where your money goes.</h1>
     </header>
 
           <div id="homePage" class="page-section">
 
    <section class="dashboard" aria-live="polite">
       <div class="dash-card dash-card--primary">
+        <span class="dash-label">Available</span>
+        <span class="dash-value" id="availableValue">₹0.00</span>
+        <span class="dash-subvalue" id="availableHint">Income minus recorded spending</span>
+      </div>
+      <div class="dash-card">
         <span class="dash-label">Total spent</span>
         <span class="dash-value" id="totalValue">₹0.00</span>
       </div>
