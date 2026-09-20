@@ -1409,3 +1409,291 @@ document.addEventListener("click", event => {
   openLedgerPage(button.dataset.page, button);
 });
 
+
+
+/* =========================================
+   GOOGLE PAY / STATEMENT IMPORT
+   Local-only importer: no account access,
+   no network calls, no backend.
+========================================= */
+(function initStatementImporter() {
+  const fileInput = document.getElementById('gpayFile');
+  const pasteInput = document.getElementById('gpayPaste');
+  const importBtn = document.getElementById('gpayImportBtn');
+  const sampleBtn = document.getElementById('gpaySampleBtn');
+  const status = document.getElementById('gpayImportStatus');
+  const preview = document.getElementById('gpayImportPreview');
+  if (!fileInput || !pasteInput || !importBtn) return;
+
+  const money = value => '₹' + Number(value || 0).toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  const normalise = value => String(value ?? '').trim().toLowerCase().replace(/[\s_\-./]+/g, '');
+
+  function parseAmount(value) {
+    if (value === null || value === undefined) return null;
+    const raw = String(value).replace(/₹/g, '').replace(/INR/gi, '').trim();
+    if (!raw) return null;
+    const negative = /^\s*\(.*\)\s*$/.test(raw) || /^-/.test(raw) || /\b(debit|paid|sent|payment)\b/i.test(raw);
+    const cleaned = raw.replace(/[(),]/g, '').replace(/[^\d.-]/g, '');
+    const n = Number(cleaned);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    return negative ? -n : n;
+  }
+
+  function parseDate(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return new Date().toISOString().slice(0, 10);
+    const direct = new Date(raw);
+    if (!Number.isNaN(direct.getTime())) return direct.toISOString().slice(0, 10);
+    const m = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (m) {
+      const year = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+      const d = new Date(year, Number(m[2]) - 1, Number(m[1]));
+      if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    }
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function categoryFor(description) {
+    const text = String(description || '').toLowerCase();
+    const rules = [
+      ['Food', /swiggy|zomato|restaurant|cafe|coffee|food|pizza|bakery|hotel|eat/],
+      ['Groceries', /grocery|grocer|supermarket|dmart|bigbasket|blinkit|zepto|instamart|milk|vegetable/],
+      ['Fuel', /petrol|fuel|diesel|indianoil|bharat petroleum|hpcl|iocl|shell/],
+      ['Bills', /electric|electricity|water bill|gas bill|recharge|mobile|internet|broadband|airtel|jio|vi |bsnl|utility/],
+      ['Transport', /uber|ola|rapido|metro|bus|train|irctc|parking|toll|cab|auto/],
+      ['Housing', /rent|housing|maintenance|apartment|hostel/],
+      ['Leisure', /movie|cinema|netflix|spotify|prime video|game|gaming|bookmyshow|entertainment/]
+    ];
+    const hit = rules.find(([, pattern]) => pattern.test(text));
+    return hit ? hit[0] : 'Other';
+  }
+
+  function splitCsvLine(line) {
+    const out = [];
+    let current = '';
+    let quoted = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"' && line[i + 1] === '"' && quoted) { current += '"'; i++; continue; }
+      if (ch === '"') { quoted = !quoted; continue; }
+      if (ch === ',' && !quoted) { out.push(current.trim()); current = ''; continue; }
+      current += ch;
+    }
+    out.push(current.trim());
+    return out;
+  }
+
+  function parseCsv(text) {
+    const lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/).filter(line => line.trim());
+    if (!lines.length) return [];
+    const first = splitCsvLine(lines[0]);
+    const looksLikeHeader = first.some(v => /date|amount|description|merchant|transaction|debit|credit|type|status/i.test(v));
+    const headers = looksLikeHeader ? first.map(normalise) : [];
+    const rows = [];
+
+    for (let i = looksLikeHeader ? 1 : 0; i < lines.length; i++) {
+      const cells = splitCsvLine(lines[i]);
+      if (!cells.length) continue;
+      if (headers.length) {
+        const row = {};
+        headers.forEach((h, index) => row[h] = cells[index] || '');
+        rows.push(row);
+      } else {
+        rows.push({ raw: cells });
+      }
+    }
+    return rows;
+  }
+
+  function firstValue(row, names) {
+    for (const name of names) {
+      const key = normalise(name);
+      if (Object.prototype.hasOwnProperty.call(row, key) && String(row[key]).trim()) return row[key];
+    }
+    return '';
+  }
+
+  function rowToExpense(row) {
+    let description = firstValue(row, [
+      'description','merchant','merchant name','transaction details','transaction detail',
+      'details','narration','payee','name','note','remarks'
+    ]);
+    let date = firstValue(row, ['date','transaction date','transactiondate','value date','timestamp']);
+    let amountRaw = firstValue(row, ['amount','transaction amount','debit','paid','withdrawal','value']);
+    let type = firstValue(row, ['type','transaction type','status']);
+
+    if (row.raw) {
+      const cells = row.raw;
+      const dateCell = cells.find(c => /\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}/.test(c)) || cells[0];
+      const amountCell = cells.find(c => /₹|INR|\d+[,.]?\d*\.\d{1,2}/.test(c));
+      date = date || dateCell;
+      amountRaw = amountRaw || amountCell;
+      description = description || cells.filter(c => c !== dateCell && c !== amountCell).join(' ');
+    }
+
+    if (!description && !amountRaw) return null;
+    let amount = parseAmount(amountRaw);
+    if (amount === null) {
+      const debit = parseAmount(firstValue(row, ['debit','paid','withdrawal']));
+      const credit = parseAmount(firstValue(row, ['credit','received','deposit']));
+      if (debit !== null) amount = -Math.abs(debit);
+      else if (credit !== null) amount = Math.abs(credit);
+    }
+    if (amount === null || amount >= 0) return null; // Ledger import is expense-only.
+
+    const cleanDescription = String(description || 'Google Pay transaction').replace(/\s+/g, ' ').trim().slice(0, 120);
+    return {
+      description: cleanDescription || 'Google Pay transaction',
+      amount: Math.abs(amount),
+      category: categoryFor(cleanDescription),
+      date: parseDate(date)
+    };
+  }
+
+  function parseJson(text) {
+    const parsed = JSON.parse(text);
+    const rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed.transactions) ? parsed.transactions : [];
+    return rows.map(item => ({
+      description: item.description || item.merchant || item.name || item.details || item.narration || '',
+      amount: item.amount ?? item.debit ?? item.paid ?? null,
+      date: item.date || item.transactionDate || item.timestamp || '',
+      type: item.type || ''
+    })).map(rowToExpense).filter(Boolean);
+  }
+
+  function parseText(text) {
+    const trimmed = String(text || '').trim();
+    if (!trimmed) return [];
+    if (/^\s*[\[{]/.test(trimmed)) {
+      try { return parseJson(trimmed); } catch (_) {}
+    }
+    return parseCsv(trimmed).map(rowToExpense).filter(Boolean);
+  }
+
+  function fingerprint(item) {
+    return [
+      item.date,
+      Number(item.amount).toFixed(2),
+      String(item.description).toLowerCase().replace(/\s+/g, ' ').trim()
+    ].join('|');
+  }
+
+  function loadExisting() {
+    try {
+      const raw = localStorage.getItem('ledger.expenses');
+      const data = raw ? JSON.parse(raw) : [];
+      return Array.isArray(data) ? data : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function showPreview(items, duplicateCount) {
+    preview.hidden = false;
+    preview.innerHTML = '<p class="import-preview-title">Ready to import · ' + items.length + ' new expense' + (items.length === 1 ? '' : 's') + (duplicateCount ? ' · ' + duplicateCount + ' duplicate' + (duplicateCount === 1 ? '' : 's') + ' skipped' : '') + '</p>';
+    items.slice(0, 5).forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'import-preview-row';
+      const left = document.createElement('span');
+      left.textContent = item.description + ' · ' + item.category;
+      const right = document.createElement('span');
+      right.textContent = '-' + money(item.amount);
+      row.append(left, right);
+      preview.appendChild(row);
+    });
+    if (items.length > 5) {
+      const more = document.createElement('p');
+      more.className = 'planner-note';
+      more.textContent = '+ ' + (items.length - 5) + ' more';
+      preview.appendChild(more);
+    }
+  }
+
+  function renderLedgerAfterImport() {
+    if (typeof render === 'function') render();
+    if (typeof updateMoneyAnalysis === 'function') updateMoneyAnalysis();
+    if (window.LedgerHealth && typeof window.LedgerHealth.render === 'function') window.LedgerHealth.render();
+    if (window.LedgerPlanner && typeof window.LedgerPlanner.render === 'function') window.LedgerPlanner.render();
+  }
+
+  function importText(text) {
+    const parsed = parseText(text);
+    if (!parsed.length) {
+      status.textContent = 'No expense transactions were detected. Use a CSV/TXT/JSON export with date, merchant/description and amount fields.';
+      status.classList.add('is-error');
+      preview.hidden = true;
+      return;
+    }
+
+    const existing = loadExisting();
+    const fingerprints = new Set(existing.map(fingerprint));
+    const fresh = [];
+    let duplicates = 0;
+
+    parsed.forEach(item => {
+      const key = fingerprint(item);
+      if (fingerprints.has(key)) duplicates++;
+      else { fingerprints.add(key); fresh.push(item); }
+    });
+
+    showPreview(fresh, duplicates);
+
+    if (!fresh.length) {
+      status.textContent = 'Nothing new to import. All detected transactions already exist in Ledger.';
+      return;
+    }
+
+    const withIds = fresh.map(item => ({
+      id: Date.now() + Math.random(),
+      description: item.description,
+      amount: Number(item.amount),
+      category: item.category,
+      date: item.date
+    }));
+
+    localStorage.setItem('ledger.expenses', JSON.stringify(existing.concat(withIds)));
+    renderLedgerAfterImport();
+
+    status.textContent = 'Imported ' + fresh.length + ' expense' + (fresh.length === 1 ? '' : 's') + (duplicates ? ' and skipped ' + duplicates + ' duplicate' + (duplicates === 1 ? '' : 's') : '') + '.';
+    status.classList.remove('is-error');
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+    status.textContent = 'Reading ' + file.name + '…';
+    preview.hidden = true;
+    try {
+      importText(await file.text());
+    } catch (err) {
+      status.textContent = 'Could not read this file. Please use CSV, TXT or JSON.';
+      status.classList.add('is-error');
+    }
+  });
+
+  importBtn.addEventListener('click', () => {
+    const text = pasteInput.value.trim();
+    if (!text) {
+      status.textContent = 'Choose a file or paste a statement first.';
+      status.classList.add('is-error');
+      return;
+    }
+    importText(text);
+  });
+
+  sampleBtn.addEventListener('click', () => {
+    pasteInput.value = [
+      'Date,Description,Amount,Type',
+      '2026-09-18,Swiggy,420,Debit',
+      '2026-09-19,Indian Oil,2000,Debit',
+      '2026-09-19,Metro,60,Debit'
+    ].join('\n');
+    status.textContent = 'Sample loaded. Tap Import transactions to add it.';
+    status.classList.remove('is-error');
+    preview.hidden = true;
+  });
+})();
