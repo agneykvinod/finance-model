@@ -1187,6 +1187,160 @@ updateMoneyAnalysis();
   }
 })();
 
+
+/* =========================================
+   MONEY HEALTH
+   Local-only educational score based on Ledger data.
+========================================= */
+(function initMoneyHealth() {
+  const healthPage = document.getElementById('healthPage');
+  if (!healthPage) return;
+
+  function healthMoney(value) {
+    return typeof formatCurrency === 'function'
+      ? formatCurrency(value)
+      : '₹' + Number(value || 0).toLocaleString('en-IN');
+  }
+
+  function monthExpenses(items) {
+    const now = new Date();
+    return items.filter(e => {
+      if (!e.date) return false;
+      const d = new Date(e.date);
+      return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+  }
+
+  function calculateHealth() {
+    const incomeEntries = typeof loadIncome === 'function' ? loadIncome() : [];
+    const allExpenses = typeof loadExpenses === 'function' ? loadExpenses() : [];
+    const currentExpenses = monthExpenses(allExpenses);
+    const income = incomeEntries.reduce((s, e) => s + Number(e.amount || 0), 0);
+    const spending = currentExpenses.reduce((s, e) => s + Number(e.amount || 0), 0);
+    const surplus = income - spending;
+    const savingsRate = income > 0 ? Math.max(0, Math.min(100, surplus / income * 100)) : 0;
+
+    const categoryTotals = {};
+    currentExpenses.forEach(e => {
+      const c = e.category || 'Other';
+      categoryTotals[c] = (categoryTotals[c] || 0) + Number(e.amount || 0);
+    });
+    const topCategory = Object.entries(categoryTotals).sort((a,b) => b[1] - a[1])[0];
+    const concentration = spending > 0 && topCategory ? topCategory[1] / spending * 100 : 0;
+
+    let reserveSaved = 0, reserveTarget = 0;
+    try {
+      const raw = localStorage.getItem('ledger.investmentPlan');
+      const plan = raw ? JSON.parse(raw) : {};
+      reserveSaved = Math.max(0, Number(plan.reserveSaved || 0));
+      reserveTarget = spending * Math.max(3, Number(plan.reserveMonths || 6));
+    } catch (_) {}
+
+    const reserveCoverage = reserveTarget > 0 ? Math.min(100, reserveSaved / reserveTarget * 100) : 0;
+
+    // Transparent 100-point educational model:
+    // savings 40 + spending control 25 + reserve 20 + concentration 15.
+    const savingsPoints = income > 0 ? Math.round(Math.min(40, Math.max(0, savingsRate / 25 * 40))) : 0;
+    const spendingPoints = income > 0
+      ? Math.round(Math.min(25, Math.max(0, surplus >= 0 ? 25 : 25 + surplus / Math.max(income, 1) * 25)))
+      : 0;
+    const reservePoints = reserveTarget > 0 ? Math.round(reserveCoverage / 100 * 20) : 0;
+    const concentrationPoints = spending === 0
+      ? 0
+      : Math.round(Math.min(15, Math.max(0, (1 - Math.max(0, concentration - 25) / 75) * 15)));
+    const score = Math.max(0, Math.min(100, savingsPoints + spendingPoints + reservePoints + concentrationPoints));
+
+    const metrics = [
+      {
+        label: 'Savings rate',
+        value: income > 0 ? Math.round(savingsRate) + '%' : '—',
+        points: savingsPoints, max: 40,
+        note: income > 0 ? 'Share of recorded income left after this month’s spending.' : 'Add income to calculate this.'
+      },
+      {
+        label: 'Spending control',
+        value: income > 0 ? (surplus >= 0 ? 'Within income' : 'Over income') : '—',
+        points: spendingPoints, max: 25,
+        note: income > 0 ? 'Compares this month’s recorded spending with income.' : 'Add income to calculate this.'
+      },
+      {
+        label: 'Emergency reserve',
+        value: reserveTarget > 0 ? Math.round(reserveCoverage) + '%' : 'Not set',
+        points: reservePoints, max: 20,
+        note: reserveTarget > 0 ? healthMoney(reserveSaved) + ' saved toward ' + healthMoney(reserveTarget) + '.' : 'Set emergency savings on the Investment Planner.'
+      },
+      {
+        label: 'Spending concentration',
+        value: topCategory ? Math.round(concentration) + '%' : '—',
+        points: concentrationPoints, max: 15,
+        note: topCategory ? topCategory[0] + ' is your largest category this month.' : 'Add expenses to see category concentration.'
+      }
+    ];
+
+    const actions = [];
+    if (!income) actions.push('Add your income so Ledger can measure your savings rate and available balance.');
+    if (income && surplus < 0) {
+      actions.push('Recorded spending is above income. Review your largest categories before increasing investments.');
+    } else if (income && savingsRate < 20) {
+      actions.push('Your recorded savings rate is below 20%. Review recurring and discretionary spending for possible room.');
+    }
+    if (reserveTarget > 0 && reserveCoverage < 100) {
+      actions.push('Build the emergency reserve toward the target shown in your Investment Planner.');
+    }
+    if (topCategory && concentration > 45) {
+      actions.push(topCategory[0] + ' represents ' + Math.round(concentration) + '% of this month’s spending. Check whether that concentration is intentional.');
+    }
+    if (!actions.length) actions.push('Keep recording transactions consistently so your score remains useful over time.');
+
+    return { score, metrics, actions };
+  }
+
+  function renderHealth() {
+    const data = calculateHealth();
+    const score = document.getElementById('healthScore');
+    const ring = document.getElementById('healthScoreRing');
+    score.textContent = data.score;
+    ring.style.setProperty('--health-progress', (data.score * 3.6) + 'deg');
+
+    let title = data.score >= 80 ? 'Strong foundation'
+      : data.score >= 60 ? 'Healthy, with room to improve'
+      : data.score >= 40 ? 'Building your foundation'
+      : 'Start with the basics';
+
+    if (!data.metrics.some(m => m.points > 0)) title = 'Add your financial data';
+    document.getElementById('healthScoreTitle').textContent = title;
+    document.getElementById('healthScoreSummary').textContent =
+      data.metrics.some(m => m.points > 0)
+        ? 'Based on the income and expenses currently stored on this device.'
+        : 'Record income and expenses to generate your first score.';
+
+    const breakdown = document.getElementById('healthBreakdown');
+    breakdown.innerHTML = '';
+    data.metrics.forEach(m => {
+      const row = document.createElement('article');
+      row.className = 'health-metric';
+      row.innerHTML =
+        '<div class="health-metric-top"><div><strong>' + m.label + '</strong><span>' +
+        m.note + '</span></div><b>' + m.value + '</b></div>' +
+        '<div class="health-meter"><span style="width:' + ((m.points / m.max) * 100) + '%"></span></div>' +
+        '<small>' + m.points + ' / ' + m.max + ' points</small>';
+      breakdown.appendChild(row);
+    });
+
+    const actions = document.getElementById('healthActions');
+    actions.innerHTML = '';
+    data.actions.forEach((action, i) => {
+      const row = document.createElement('div');
+      row.className = 'health-action';
+      row.innerHTML = '<span>0' + (i + 1) + '</span><p>' + action + '</p>';
+      actions.appendChild(row);
+    });
+  }
+
+  window.LedgerHealth = { render: renderHealth };
+  renderHealth();
+})();
+
 /* =========================================
    PAGE NAVIGATION
    One visibility system for every page: the HTML `hidden` property.
@@ -1201,6 +1355,7 @@ const PAGE_IDS = {
   home: "homePage",
   income: "incomePage",
   insights: "insightsPage",
+  health: "healthPage",
 };
 
 navButtons.forEach(button => {
@@ -1232,6 +1387,14 @@ navButtons.forEach(button => {
     // Refresh page-specific numbers every time the page is opened.
     if (pageName === "income") {
       updateMoneyAnalysis();
+    }
+
+    if (pageName === "health" && window.LedgerHealth) {
+      try {
+        window.LedgerHealth.render();
+      } catch (err) {
+        console.error("Could not refresh Money Health:", err);
+      }
     }
 
     if (pageName === "insights" && window.LedgerPlanner) {
