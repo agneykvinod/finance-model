@@ -439,6 +439,52 @@
 
     </section>
 
+    <section id="healthPage" class="page-section" hidden>
+      <header class="page-header health-header">
+        <span class="page-label">MONEY HEALTH</span>
+        <h2>Understand the health of your money.</h2>
+        <p>A simple score built from the income, spending and planning data already stored in Ledger.</p>
+      </header>
+
+      <section class="health-score-card" aria-labelledby="health-score-title">
+        <div class="health-score-ring" id="healthScoreRing" aria-label="Money Health score">
+          <div>
+            <strong id="healthScore">0</strong>
+            <span>/ 100</span>
+          </div>
+        </div>
+        <div class="health-score-copy">
+          <span class="health-eyebrow">YOUR MONEY HEALTH</span>
+          <h3 id="healthScoreTitle">Add your financial data</h3>
+          <p id="healthScoreSummary">Record income and expenses to generate your first score.</p>
+        </div>
+      </section>
+
+      <section class="health-card" aria-labelledby="health-breakdown-title">
+        <div class="health-card-heading">
+          <span class="page-label">BREAKDOWN</span>
+          <h3 id="health-breakdown-title">What is shaping your score?</h3>
+        </div>
+        <div id="healthBreakdown" class="health-breakdown"></div>
+      </section>
+
+      <section class="health-card" aria-labelledby="health-actions-title">
+        <div class="health-card-heading">
+          <span class="page-label">ACTION PLAN</span>
+          <h3 id="health-actions-title">Your next money moves</h3>
+        </div>
+        <div id="healthActions" class="health-actions"></div>
+      </section>
+
+      <section class="health-card health-card--dark" aria-labelledby="health-method-title">
+        <span class="page-label">LEDGER METHOD</span>
+        <h3 id="health-method-title">A transparent score, not a credit score.</h3>
+        <p>Ledger uses simple educational rules from your locally stored data. It does not use your bank account, credit bureau data, or external financial profile.</p>
+      </section>
+
+      <p class="planner-disclaimer planner-disclaimer--page">Educational indicator only. It is not a credit score, financial advice, or a measure of creditworthiness.</p>
+    </section>
+
     <nav class="bottom-nav" aria-label="Main navigation">
 
   <button class="nav-btn active" data-page="home">
@@ -454,6 +500,11 @@
   <button class="nav-btn" data-page="insights">
     <span>◈</span>
     <small>Insights</small>
+  </button>
+
+  <button class="nav-btn" data-page="health">
+    <span>◉</span>
+    <small>Health</small>
   </button>
 
   <button class="nav-btn" data-page="ai">
