@@ -1366,6 +1366,33 @@ function openLedgerPage(pageName, button) {
     return;
   }
 
+  if (pageName === "transactions") {
+    document.querySelectorAll(".page-section").forEach(page => { page.hidden = true; });
+    const home = document.getElementById("homePage");
+    if (home) home.hidden = false;
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.page === "transactions");
+      if (btn.dataset.page === "transactions") btn.setAttribute("aria-current", "page");
+      else btn.removeAttribute("aria-current");
+    });
+    document.querySelector(".ledger")?.scrollIntoView({behavior:"smooth",block:"start"});
+    return;
+  }
+
+  if (pageName === "add") {
+    document.querySelectorAll(".page-section").forEach(page => { page.hidden = true; });
+    const home = document.getElementById("homePage");
+    if (home) home.hidden = false;
+    document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+    document.querySelector('.nav-btn[data-page="home"]')?.classList.add("active");
+    const form = document.getElementById("expenseForm");
+    if (form) {
+      form.scrollIntoView({behavior:"smooth",block:"start"});
+      setTimeout(() => document.getElementById("description")?.focus(), 250);
+    }
+    return;
+  }
+
   const selectedPage = document.getElementById(PAGE_IDS[pageName]);
   if (!selectedPage) {
     console.error("Ledger: page not found:", pageName);
