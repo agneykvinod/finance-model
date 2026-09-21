@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Ledger 2.0 — Expense Tracker</title>
-  <link rel="stylesheet" href="style.css?v=20260921-amountfix">
+  <link rel="stylesheet" href="style.css?v=20260921-amountfix2">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0a0a">
   <meta name="mobile-web-app-capable" content="yes">
@@ -75,11 +75,8 @@
           <input type="text" id="description" placeholder="Coffee, rent, groceries…" required>
         </div>
         <div class="field">
-          <label for="amount">Amount (INR)</label>
-          <div class="amount-input">
-            <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
-            <span class="currency-prefix" aria-hidden="true">₹</span>
-          </div>
+          <label for="amount">Amount (₹)</label>
+          <input class="amount-field" type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" inputmode="decimal" required>
         </div>
         <div class="field">
           <label for="category">Category</label>
