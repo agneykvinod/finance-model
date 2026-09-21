@@ -2060,3 +2060,14 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,10,10,.07);}
   background: var(--white) !important;
   border-color: var(--black) !important;
 }
+
+
+/* Amount input: plain editable field; currency is shown in the label to avoid overlap on mobile browsers */
+.amount-field {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 11px 12px !important;
+  font-family: var(--mono) !important;
+  font-variant-numeric: tabular-nums !important;
+  text-indent: 0 !important;
+}
