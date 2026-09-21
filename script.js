@@ -2034,3 +2034,60 @@ document.addEventListener("click", event => {
 
   selectMethod('receipt');
 })();
+
+/* ==========================================
+   PWA INSTALL / ADD TO HOME SCREEN
+========================================== */
+(function initAppInstall() {
+  const card = document.getElementById('installCard');
+  const button = document.getElementById('installAppBtn');
+  const status = document.getElementById('installStatus');
+  if (!card || !button) return;
+
+  let deferredPrompt = null;
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  if (isStandalone()) return;
+
+  card.hidden = false;
+
+  window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    deferredPrompt = event;
+    card.hidden = false;
+  });
+
+  button.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if (choice.outcome === 'accepted') {
+        status.textContent = 'Ledger is being added to your home screen.';
+        card.hidden = true;
+      } else {
+        status.textContent = 'Install cancelled. You can try again anytime.';
+      }
+      return;
+    }
+
+    status.textContent = 'On Android Chrome, tap ⋮ → Add to Home screen (or Install app).';
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    card.hidden = true;
+  });
+})();
+
+/* Register the offline app shell when supported. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(error => {
+      console.warn('Ledger service worker registration failed:', error);
+    });
+  });
+}
