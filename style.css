@@ -1842,3 +1842,10 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,10,10,.07);}
   .import-panel-top .import-badge { display:none; }
   .import-panel { padding-top:14px; }
 }
+
+
+/* MONEY KNOWLEDGE entry card */
+.knowledge-home-card{margin-top:18px;padding:22px;border:1px solid #e6e6e6;border-radius:20px;background:#f7f7f5;display:flex;align-items:center;justify-content:space-between;gap:18px;}
+.knowledge-home-card h2{margin:7px 0 7px;font-size:20px;letter-spacing:-.025em;}
+.knowledge-home-card p{margin:0;color:#777;font-size:12px;line-height:1.55;max-width:460px;}
+@media(max-width:680px){.knowledge-home-card{display:block}.knowledge-home-card .ai-card-btn{display:inline-flex;margin-top:16px}}
