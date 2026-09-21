@@ -1986,3 +1986,33 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,10,10,.07);}
   text-indent: 0 !important;
   box-sizing: border-box;
 }
+
+
+/* FINAL AMOUNT FIELD FIX: keep the INR symbol outside the editable text area */
+.amount-input {
+  display: grid !important;
+  grid-template-columns: 34px minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  position: relative !important;
+  width: 100% !important;
+}
+.amount-input .currency-prefix {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--grey-500) !important;
+  font-family: var(--mono) !important;
+  font-size: .95rem !important;
+  pointer-events: none !important;
+}
+.amount-input input {
+  grid-column: 2 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding-left: 12px !important;
+  text-indent: 0 !important;
+  box-sizing: border-box !important;
+}
