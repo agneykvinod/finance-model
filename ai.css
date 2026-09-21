@@ -358,3 +358,8 @@ body {
     max-width: 92%;
   }
   }
+
+
+/* Ledger AI panda logo */
+.ai-panda { background:#111; border-color:#444; overflow:hidden; }
+.ai-panda svg { width:30px; height:30px; display:block; }
