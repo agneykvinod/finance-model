@@ -1422,6 +1422,7 @@ document.addEventListener("click", event => {
   const importBtn = document.getElementById('gpayImportBtn');
   const sampleBtn = document.getElementById('gpaySampleBtn');
   const status = document.getElementById('gpayImportStatus');
+  const fileStatus = document.getElementById('gpayFileStatus') || status;
   const preview = document.getElementById('gpayImportPreview');
   if (!fileInput || !pasteInput || !importBtn) return;
 
@@ -1668,13 +1669,14 @@ document.addEventListener("click", event => {
   fileInput.addEventListener('change', async () => {
     const file = fileInput.files && fileInput.files[0];
     if (!file) return;
-    status.textContent = 'Reading ' + file.name + '…';
+    fileStatus.textContent = 'Reading ' + file.name + '…';
+    fileStatus.classList.remove('is-error');
     preview.hidden = true;
     try {
       importText(await file.text());
     } catch (err) {
-      status.textContent = 'Could not read this file. Please use CSV, TXT or JSON.';
-      status.classList.add('is-error');
+      fileStatus.textContent = 'Could not read this file. Please use CSV, TXT or JSON.';
+      fileStatus.classList.add('is-error');
     }
   });
 
@@ -1971,4 +1973,32 @@ document.addEventListener("click", event => {
   });
 
   resetBtn.addEventListener('click', resetScanner);
+})();
+
+
+/* ==========================================
+   SMART IMPORT METHOD SWITCHER
+========================================== */
+(function initSmartImportTabs() {
+  const buttons = document.querySelectorAll('[data-import-method]');
+  const panels = document.querySelectorAll('[data-import-panel]');
+  if (!buttons.length || !panels.length) return;
+
+  function selectMethod(method) {
+    buttons.forEach(button => {
+      const active = button.dataset.importMethod === method;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+
+    panels.forEach(panel => {
+      panel.hidden = panel.dataset.importPanel !== method;
+    });
+  }
+
+  buttons.forEach(button => {
+    button.addEventListener('click', () => selectMethod(button.dataset.importMethod));
+  });
+
+  selectMethod('receipt');
 })();
