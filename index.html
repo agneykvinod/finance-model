@@ -23,13 +23,16 @@
   <span id="moneyImpactText"></span>
 </div>
     <header class="app-header">
-      <div class="home-header-row">
-        <div>
-          <p class="wordmark">Ledger</p>
-          <h1 class="tagline">Know where your money goes.</h1>
+      <div class="home-header-row dashboard-topbar">
+        <span class="menu-mark" aria-hidden="true">☰</span>
+        <div class="brand-lockup">
+          <p class="wordmark">LEDGER</p>
+          <span class="tagline">Personal finance</span>
         </div>
+        <a class="top-ai-link" href="ai.html" aria-label="Open Ledger AI"><span class="panda-mini">🐼</span></a>
         <span class="home-date" id="homeDate" aria-label="Today"></span>
       </div>
+      <div class="dashboard-welcome"><span>YOUR MONEY DASHBOARD</span><strong>Know where your money goes.</strong></div>
     </header>
 
           <div id="homePage" class="page-section">
@@ -51,6 +54,37 @@
       <button type="button" class="quick-action nav-quick" data-page="insights">
         <span class="quick-action-icon">◔</span><span>Insights</span>
       </button>
+    </section>
+
+
+    <section class="analytics" aria-labelledby="analytics-heading">
+      <h2 id="analytics-heading" class="section-heading">This month overview</h2>
+
+      <div class="stats-grid">
+        <div class="stat-block">
+          <span class="stat-label">Spent this month</span>
+          <span class="stat-value" id="monthTotal">₹0.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">Transactions</span>
+          <span class="stat-value" id="monthCount">0</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">Average transaction</span>
+          <span class="stat-value" id="monthAverage">₹0.00</span>
+        </div>
+        <div class="stat-block">
+          <span class="stat-label">Largest expense</span>
+          <span class="stat-value" id="monthLargest">₹0.00</span>
+        </div>
+        <div class="stat-block stat-block--wide">
+          <span class="stat-label">Top category</span>
+          <span class="stat-value" id="monthTopCategory">—</span>
+        </div>
+      </div>
+
+      <h3 class="breakdown-title">By category</h3>
+      <div id="categoryChart" class="category-chart"></div>
     </section>
 
     <section class="entry" aria-labelledby="entry-heading">
@@ -212,35 +246,6 @@
       <p id="emptyState" class="empty-state">No expenses yet. Add your first one above.</p>
     </section>
 
-    <section class="analytics" aria-labelledby="analytics-heading">
-      <h2 id="analytics-heading" class="section-heading">This month's analytics</h2>
-
-      <div class="stats-grid">
-        <div class="stat-block">
-          <span class="stat-label">Spent this month</span>
-          <span class="stat-value" id="monthTotal">₹0.00</span>
-        </div>
-        <div class="stat-block">
-          <span class="stat-label">Transactions</span>
-          <span class="stat-value" id="monthCount">0</span>
-        </div>
-        <div class="stat-block">
-          <span class="stat-label">Average transaction</span>
-          <span class="stat-value" id="monthAverage">₹0.00</span>
-        </div>
-        <div class="stat-block">
-          <span class="stat-label">Largest expense</span>
-          <span class="stat-value" id="monthLargest">₹0.00</span>
-        </div>
-        <div class="stat-block stat-block--wide">
-          <span class="stat-label">Top category</span>
-          <span class="stat-value" id="monthTopCategory">—</span>
-        </div>
-      </div>
-
-      <h3 class="breakdown-title">By category</h3>
-      <div id="categoryChart" class="category-chart"></div>
-    </section>
           </div>        
     <section id="incomePage" class="page-section" hidden>
       <div class="money-analysis" id="moneyAnalysis">
