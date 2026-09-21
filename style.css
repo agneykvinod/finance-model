@@ -1968,3 +1968,21 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,10,10,.07);}
   .dash-value { font-size:.96rem; }
   .quick-action { min-height:48px; flex-direction:column; gap:4px; }
 }
+
+
+/* Fix INR prefix spacing inside amount fields */
+.amount-input { position: relative; }
+.amount-input .currency-prefix {
+  left: 16px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  width: 18px;
+  justify-content: center;
+}
+.amount-input input {
+  padding-left: 48px !important;
+  text-indent: 0 !important;
+  box-sizing: border-box;
+}
