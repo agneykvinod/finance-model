@@ -1400,20 +1400,28 @@ function openLedgerPage(pageName, button) {
 
 // Insights Money Health card — keeps the compact card visible and reveals
 // the existing detailed health breakdown only when the user asks for it.
-(function initInsightsHealthCard() {
+document.addEventListener("DOMContentLoaded", () => {
   const card = document.getElementById("insightsHealthCard");
   const details = document.getElementById("insightsHealthDetails");
   if (!card || !details) return;
 
-  card.addEventListener("click", () => {
+  card.addEventListener("click", (event) => {
+    event.preventDefault();
     const expanded = card.getAttribute("aria-expanded") === "true";
-    card.setAttribute("aria-expanded", String(!expanded));
+    card.setAttribute("aria-expanded", expanded ? "false" : "true");
     details.hidden = expanded;
+
     if (!expanded && window.LedgerHealth && typeof window.LedgerHealth.render === "function") {
       window.LedgerHealth.render();
     }
+
+    if (!expanded) {
+      requestAnimationFrame(() => {
+        details.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   });
-})();
+});
 
 // Delegated navigation keeps the buttons working even if the nav is
 // re-rendered or the page structure changes later.
