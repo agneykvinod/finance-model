@@ -1192,8 +1192,19 @@ render();
    Local-only educational score based on Ledger data.
 ========================================= */
 (function initMoneyHealth() {
-  const healthPage = document.getElementById('healthPage');
-  if (!healthPage) return;
+  // Money Health now lives inside the Insights page. Do not gate
+  // initialization on the old standalone healthPage element.
+  const healthScore = document.getElementById('healthScore');
+  const healthScoreRing = document.getElementById('healthScoreRing');
+  const healthScoreTitle = document.getElementById('healthScoreTitle');
+  const healthScoreSummary = document.getElementById('healthScoreSummary');
+  const healthBreakdown = document.getElementById('healthBreakdown');
+  const healthActions = document.getElementById('healthActions');
+
+  if (!healthScore || !healthScoreRing || !healthScoreTitle || !healthScoreSummary || !healthBreakdown || !healthActions) {
+    console.warn('Ledger Money Health: Insights health elements are missing.');
+    return;
+  }
 
   function healthMoney(value) {
     return typeof formatCurrency === 'function'
@@ -1296,10 +1307,8 @@ render();
 
   function renderHealth() {
     const data = calculateHealth();
-    const score = document.getElementById('healthScore');
-    const ring = document.getElementById('healthScoreRing');
-    score.textContent = data.score;
-    ring.style.setProperty('--health-progress', (data.score * 3.6) + 'deg');
+    healthScore.textContent = data.score;
+    healthScoreRing.style.setProperty('--health-progress', (data.score * 3.6) + 'deg');
 
     let title = data.score >= 80 ? 'Strong foundation'
       : data.score >= 60 ? 'Healthy, with room to improve'
@@ -1307,13 +1316,13 @@ render();
       : 'Start with the basics';
 
     if (!data.metrics.some(m => m.points > 0)) title = 'Add your financial data';
-    document.getElementById('healthScoreTitle').textContent = title;
-    document.getElementById('healthScoreSummary').textContent =
+    healthScoreTitle.textContent = title;
+    healthScoreSummary.textContent =
       data.metrics.some(m => m.points > 0)
         ? 'Based on the income and expenses currently stored on this device.'
         : 'Record income and expenses to generate your first score.';
 
-    const breakdown = document.getElementById('healthBreakdown');
+    const breakdown = healthBreakdown;
     breakdown.innerHTML = '';
     data.metrics.forEach(m => {
       const row = document.createElement('article');
@@ -1326,7 +1335,7 @@ render();
       breakdown.appendChild(row);
     });
 
-    const actions = document.getElementById('healthActions');
+    const actions = healthActions;
     actions.innerHTML = '';
     data.actions.forEach((action, i) => {
       const row = document.createElement('div');
