@@ -57,8 +57,7 @@
 
   let seen=seenSet();
   let saved=savedSet();
-  let queue=[];
-  let index=0;
+  let current=null;
   let savedMode=false;
   let touchStartX=0;
   let touchStartY=0;
@@ -66,7 +65,6 @@
 
   const card=$('knowledgeCard');
 
-  function remainingLessons(){return lessons.filter(l=>!seen.has(l.id));}
   function refreshHeader(){
     const learned=Math.min(seen.size,lessons.length);
     $('progressText').textContent=learned+' learned';
@@ -91,6 +89,7 @@
   }
 
   function renderCard(lesson){
+    current=lesson||null;
     if(!lesson){
       card.hidden=true;
       $('emptyState').hidden=false;
@@ -101,7 +100,6 @@
     $('emptyState').hidden=true;
     $('cardCategory').textContent=lesson.category;
     $('cardNumber').textContent=String(lesson.id.split('-')[1]).padStart(2,'0')+' / '+lessons.length;
-    $('lessonMark').textContent='';
     $('cardText').textContent=lesson.text;
     setSavedButton(lesson);
     card.classList.remove('card-enter');
@@ -109,71 +107,49 @@
     card.classList.add('card-enter');
   }
 
-  function nextLesson(){
-    if(savedMode){
-      const list=lessons.filter(l=>saved.has(l.id));
-      index++;
-      renderSavedList();
-      if(index<list.length) return renderCard(list[index]);
-      card.hidden=true;
-      return;
-    }
-    const available=remainingLessons();
-    if(!available.length) return renderCard(null);
-    queue=available;
-    if(index>=queue.length) index=0;
-    const lesson=queue[index];
-    markSeen(lesson);
-    refreshHeader();
-    renderCard(lesson);
-  }
-
-  function startLessons(){
-    savedMode=false;
-    $('savedSection').hidden=true;
-    index=0;
-    queue=remainingLessons();
-    if(queue.length) {
-      const lesson=queue[0];
-      markSeen(lesson);
-      refreshHeader();
-      renderCard(lesson);
-    } else renderCard(null);
+  function nextAvailableLesson(){
+    return lessons.find(l=>!seen.has(l.id))||null;
   }
 
   function showNext(direction){
-    const current=savedMode?queue[index]:queue[index];
     if(!current)return;
     card.classList.remove('card-exit-left','card-exit-right');
     card.classList.add(direction==='left'?'card-exit-left':'card-exit-right');
     setTimeout(function(){
       card.classList.remove('card-exit-left','card-exit-right');
-      index++;
       if(savedMode){
         const list=lessons.filter(l=>saved.has(l.id));
-        queue=list;
-        if(index<list.length) renderCard(list[index]);
-        else {card.hidden=true;renderSavedList();}
-      }else{
-        queue=remainingLessons();
-        if(queue.length) {
-          if(index>=queue.length) index=0;
-          const lesson=queue[index];
-          markSeen(lesson);
-          refreshHeader();
-          renderCard(lesson);
-        } else renderCard(null);
+        const position=list.findIndex(l=>l.id===current.id);
+        renderCard(list[position+1]||null);
+        renderSavedList();
+        return;
       }
+      const next=nextAvailableLesson();
+      if(next){
+        markSeen(next);
+        refreshHeader();
+        renderCard(next);
+      }else renderCard(null);
     },210);
   }
 
+  function startLessons(){
+    savedMode=false;
+    $('savedSection').hidden=true;
+    const next=nextAvailableLesson();
+    if(next){
+      markSeen(next);
+      refreshHeader();
+      renderCard(next);
+    }else renderCard(null);
+  }
+
   function toggleSave(){
-    const lesson=queue[index];
-    if(!lesson)return;
-    if(saved.has(lesson.id)) saved.delete(lesson.id);
-    else saved.add(lesson.id);
+    if(!current)return;
+    if(saved.has(current.id)) saved.delete(current.id);
+    else saved.add(current.id);
     write(savedKey,[...saved]);
-    setSavedButton(lesson);
+    setSavedButton(current);
     refreshHeader();
     renderSavedList();
   }
@@ -195,7 +171,15 @@
       remove.className='text-btn';
       remove.type='button';
       remove.textContent='Remove';
-      remove.addEventListener('click',()=>{saved.delete(lesson.id);write(savedKey,[...saved]);refreshHeader();renderSavedList();});
+      remove.addEventListener('click',()=>{
+        saved.delete(lesson.id);
+        write(savedKey,[...saved]);
+        refreshHeader();
+        renderSavedList();
+        if(savedMode && current && current.id===lesson.id){
+          renderCard(lessons.find(l=>saved.has(l.id))||null);
+        }
+      });
       top.append(cat,remove);
       const p=document.createElement('p');
       p.textContent=lesson.text;
@@ -208,12 +192,9 @@
     savedMode=true;
     $('savedSection').hidden=false;
     $('emptyState').hidden=true;
-    queue=lessons.filter(l=>saved.has(l.id));
-    index=0;
-    renderSavedList();
-    if(queue.length) renderCard(queue[0]);
-    else {card.hidden=true;renderSavedList();}
     $('savedToggle').setAttribute('aria-pressed','true');
+    renderSavedList();
+    renderCard(lessons.find(l=>saved.has(l.id))||null);
     window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
   }
 
