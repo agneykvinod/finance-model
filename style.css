@@ -2016,3 +2016,47 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,10,10,.07);}
   text-indent: 0 !important;
   box-sizing: border-box !important;
 }
+
+
+/* FINAL: INR is a separate suffix so it can never cover the first digit */
+.amount-input {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 38px !important;
+  align-items: stretch !important;
+  position: relative !important;
+  width: 100% !important;
+}
+.amount-input input {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 9px 12px !important;
+  padding-left: 12px !important;
+  text-indent: 0 !important;
+  box-sizing: border-box !important;
+}
+.amount-input .currency-prefix {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  position: static !important;
+  width: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--grey-500) !important;
+  background: var(--grey-050) !important;
+  border: 1px solid var(--grey-150) !important;
+  border-left: 0 !important;
+  border-radius: 0 8px 8px 0 !important;
+  font-family: var(--mono) !important;
+  font-size: .9rem !important;
+  pointer-events: none !important;
+}
+.amount-input input {
+  border-radius: 8px 0 0 8px !important;
+}
+.amount-input:focus-within .currency-prefix {
+  background: var(--white) !important;
+  border-color: var(--black) !important;
+}
