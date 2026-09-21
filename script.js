@@ -1626,7 +1626,7 @@ document.addEventListener("click", event => {
   function importText(text) {
     const parsed = parseText(text);
     if (!parsed.length) {
-      status.textContent = 'No expense transactions were detected. Use a CSV/TXT/JSON export with date, merchant/description and amount fields.';
+      status.textContent = 'No expense transactions were detected. Use a bank or Google Pay CSV/TXT/JSON export with date, merchant/description and debit/withdrawal/amount fields.';
       status.classList.add('is-error');
       preview.hidden = true;
       return;
@@ -1699,4 +1699,276 @@ document.addEventListener("click", event => {
     status.classList.remove('is-error');
     preview.hidden = true;
   });
+})();
+
+
+/* ==========================================
+   RECEIPT SCANNER
+   Client-side OCR with Tesseract.js.
+   Image/OCR text is kept in memory only.
+========================================== */
+(function initReceiptScanner() {
+  const fileInput = document.getElementById('receiptFile');
+  const progress = document.getElementById('receiptProgress');
+  const progressLabel = document.getElementById('receiptProgressLabel');
+  const progressValue = document.getElementById('receiptProgressValue');
+  const progressBar = document.getElementById('receiptProgressBar');
+  const preview = document.getElementById('receiptPreview');
+  const image = document.getElementById('receiptImage');
+  const result = document.getElementById('receiptResult');
+  const status = document.getElementById('receiptStatus');
+  const merchantInput = document.getElementById('receiptMerchant');
+  const amountInput = document.getElementById('receiptAmount');
+  const dateInput = document.getElementById('receiptDate');
+  const categoryInput = document.getElementById('receiptCategory');
+  const addBtn = document.getElementById('receiptAddBtn');
+  const resetBtn = document.getElementById('receiptResetBtn');
+  if (!fileInput || !addBtn) return;
+
+  let worker = null;
+
+  const money = value => '₹' + Number(value || 0).toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function setProgress(label, value) {
+    const pct = Math.max(0, Math.min(100, Math.round(value)));
+    progress.hidden = false;
+    progressLabel.textContent = label;
+    progressValue.textContent = pct + '%';
+    progressBar.style.width = pct + '%';
+  }
+
+  function cleanText(text) {
+    return String(text || '')
+      .replace(/[\t ]+/g, ' ')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+  }
+
+  function parseMoneyFromText(text) {
+    const lines = cleanText(text).split('\n').map(x => x.trim()).filter(Boolean);
+    const moneyPatterns = [
+      /(?:grand\s*total|net\s*total|amount\s*due|total\s*payable|total)\s*[:₹$€£]?\s*([\d,]+(?:\.\d{1,2})?)/ig,
+      /(?:₹|INR)\s*([\d,]+(?:\.\d{1,2})?)/ig
+    ];
+
+    const candidates = [];
+    for (const pattern of moneyPatterns) {
+      let match;
+      while ((match = pattern.exec(text))) {
+        const value = Number(String(match[1]).replace(/,/g, ''));
+        if (Number.isFinite(value) && value > 0) candidates.push(value);
+      }
+    }
+
+    // Prefer the last total-like value because receipts often list item
+    // prices before the final total.
+    if (candidates.length) return candidates[candidates.length - 1];
+
+    const numericLines = lines
+      .map(line => line.match(/(?:₹|INR)?\s*([\d,]+\.\d{2})\s*$/i))
+      .filter(Boolean)
+      .map(match => Number(match[1].replace(/,/g, '')))
+      .filter(value => Number.isFinite(value) && value > 0);
+
+    return numericLines.length ? numericLines[numericLines.length - 1] : null;
+  }
+
+  function parseDateFromText(text) {
+    const patterns = [
+      /(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/,
+      /(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/
+    ];
+
+    for (const pattern of patterns) {
+      const match = text.match(pattern);
+      if (!match) continue;
+      if (match.length === 4 && match[1].length === 4) {
+        const d = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      }
+      if (match.length === 4) {
+        const year = match[3].length === 2 ? 2000 + Number(match[3]) : Number(match[3]);
+        const d = new Date(year, Number(match[2]) - 1, Number(match[1]));
+        if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+      }
+    }
+    return today();
+  }
+
+  function guessMerchant(text) {
+    const lines = cleanText(text).split('\n').map(x => x.trim()).filter(Boolean);
+    const noise = /^(tax invoice|invoice|receipt|bill|date|time|cashier|gstin|gst|phone|mobile|tel|thank|thank you|total|subtotal|grand total|amount due|qty|price|description|item)$/i;
+    const strong = /(restaurant|cafe|coffee|bakery|mart|market|store|supermarket|fuel|petrol|hotel|foods|pizza|swiggy|zomato|amazon|flipkart|dmart|bigbasket|blinkit|zepto|reliance|mcdonald|kfc|starbucks)/i;
+
+    const candidate = lines.find(line =>
+      line.length >= 3 &&
+      line.length <= 60 &&
+      !noise.test(line) &&
+      !/^\d[\d\s+().-]{6,}$/.test(line) &&
+      !/(?:₹|INR)\s*[\d,]+/i.test(line) &&
+      !/\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}/.test(line)
+    );
+
+    const strongCandidate = lines.find(line =>
+      line.length >= 3 && line.length <= 60 && strong.test(line)
+    );
+
+    return strongCandidate || candidate || 'Receipt purchase';
+  }
+
+  function categoryFor(description, text) {
+    const source = (String(description || '') + ' ' + String(text || '')).toLowerCase();
+    const rules = [
+      ['Food', /swiggy|zomato|restaurant|cafe|coffee|food|pizza|bakery|hotel|mcdonald|kfc/],
+      ['Groceries', /grocery|grocer|supermarket|dmart|bigbasket|blinkit|zepto|instamart|mart|milk|vegetable/],
+      ['Fuel', /petrol|fuel|diesel|indianoil|bharat petroleum|hpcl|iocl|shell/],
+      ['Bills', /electric|electricity|water bill|gas bill|recharge|mobile|internet|broadband|airtel|jio|vi |bsnl|utility/],
+      ['Transport', /uber|ola|rapido|metro|bus|train|irctc|parking|toll|cab|auto/],
+      ['Housing', /rent|housing|maintenance|apartment|hostel/],
+      ['Leisure', /movie|cinema|netflix|spotify|prime video|game|gaming|bookmyshow|entertainment/]
+    ];
+    const hit = rules.find(([, pattern]) => pattern.test(source));
+    return hit ? hit[0] : 'Other';
+  }
+
+  function resetScanner() {
+    fileInput.value = '';
+    preview.hidden = true;
+    result.hidden = true;
+    progress.hidden = true;
+    status.textContent = '';
+    merchantInput.value = '';
+    amountInput.value = '';
+    dateInput.value = today();
+    categoryInput.value = 'Other';
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files && fileInput.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      status.textContent = 'Please choose an image receipt.';
+      status.classList.add('is-error');
+      return;
+    }
+
+    status.classList.remove('is-error');
+    status.textContent = 'Preparing local OCR…';
+    preview.hidden = false;
+    image.src = URL.createObjectURL(file);
+    result.hidden = true;
+    setProgress('Loading OCR engine…', 5);
+
+    try {
+      if (!window.Tesseract) {
+        throw new Error('OCR library did not load. Check your internet connection and reload the page.');
+      }
+
+      if (!worker) {
+        worker = await Tesseract.createWorker('eng', 1, {
+          logger: message => {
+            if (message && typeof message.progress === 'number') {
+              setProgress(message.status || 'Scanning receipt…', 5 + message.progress * 80);
+            }
+          }
+        });
+      }
+
+      setProgress('Scanning receipt…', 15);
+      const { data } = await worker.recognize(file);
+      const text = cleanText(data.text);
+
+      if (!text) {
+        throw new Error('No readable text was found on this receipt.');
+      }
+
+      setProgress('Extracting fields…', 90);
+
+      const merchant = guessMerchant(text);
+      const amount = parseMoneyFromText(text);
+      const date = parseDateFromText(text);
+      const category = categoryFor(merchant, text);
+
+      merchantInput.value = merchant;
+      amountInput.value = amount || '';
+      dateInput.value = date;
+      categoryInput.value = category;
+      result.hidden = false;
+      setProgress('Scan complete', 100);
+
+      const confidence = Number.isFinite(Number(data.confidence)) ? Math.round(Number(data.confidence)) : null;
+      document.getElementById('receiptConfidence').textContent = confidence !== null ? confidence + '% OCR' : 'OCR';
+      status.textContent = amount
+        ? 'Receipt scanned. Review the extracted fields before adding.'
+        : 'Receipt scanned, but the amount needs to be entered manually.';
+    } catch (error) {
+      console.error('Ledger receipt scanner:', error);
+      status.textContent = error.message || 'Could not scan this receipt. Try a clearer, well-lit image.';
+      status.classList.add('is-error');
+      result.hidden = true;
+    }
+  });
+
+  addBtn.addEventListener('click', () => {
+    const description = merchantInput.value.trim() || 'Receipt purchase';
+    const amount = Number(amountInput.value);
+    const date = dateInput.value || today();
+    const category = categoryInput.value || 'Other';
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      status.textContent = 'Enter a valid receipt amount before adding.';
+      status.classList.add('is-error');
+      amountInput.focus();
+      return;
+    }
+
+    let expenses = [];
+    try {
+      const raw = localStorage.getItem('ledger.expenses');
+      expenses = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(expenses)) expenses = [];
+    } catch (_) {
+      expenses = [];
+    }
+
+    const duplicate = expenses.some(item =>
+      String(item.description || '').toLowerCase().trim() === description.toLowerCase() &&
+      Number(item.amount || 0).toFixed(2) === amount.toFixed(2) &&
+      String(item.date || '') === date
+    );
+
+    if (duplicate) {
+      status.textContent = 'This receipt looks like it is already in Ledger.';
+      status.classList.add('is-error');
+      return;
+    }
+
+    expenses.push({
+      id: Date.now() + Math.random(),
+      description: description.slice(0, 120),
+      amount,
+      category,
+      date
+    });
+
+    localStorage.setItem('ledger.expenses', JSON.stringify(expenses));
+    if (typeof render === 'function') render();
+    if (typeof updateMoneyAnalysis === 'function') updateMoneyAnalysis();
+    if (window.LedgerHealth && typeof window.LedgerHealth.render === 'function') window.LedgerHealth.render();
+    if (window.LedgerPlanner && typeof window.LedgerPlanner.render === 'function') window.LedgerPlanner.render();
+
+    status.classList.remove('is-error');
+    status.textContent = 'Added ' + description + ' · ' + money(amount) + ' to Ledger.';
+    result.hidden = true;
+  });
+
+  resetBtn.addEventListener('click', resetScanner);
 })();
