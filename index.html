@@ -76,84 +76,115 @@
 
 
 
-    <section class="import-card" aria-labelledby="gpay-import-heading">
-      <div class="import-card-head">
+    <section class="smart-import" aria-labelledby="smart-import-heading">
+      <div class="smart-import-header">
         <div>
-          <span class="page-label">BANK + GOOGLE PAY IMPORT</span>
-          <h2 id="gpay-import-heading">Bring your statements into Ledger.</h2>
-          <p>Import a bank or Google Pay CSV/TXT/JSON statement. Ledger detects common debit, withdrawal and payment fields, categorises merchants, and processes everything in this browser.</p>
+          <span class="page-label">SMART IMPORT</span>
+          <h2 id="smart-import-heading">Add money data your way.</h2>
+          <p>Choose the fastest method for the data you have. Everything is processed locally in your browser.</p>
         </div>
         <span class="import-badge">LOCAL ONLY</span>
       </div>
 
-      <label class="import-dropzone" for="gpayFile">
-        <span class="import-drop-icon">↑</span>
-        <strong>Choose a statement file</strong>
-        <small>Bank / Google Pay · CSV, TXT or JSON · nothing is uploaded</small>
-        <input id="gpayFile" type="file" accept=".csv,.txt,.json,text/csv,text/plain,application/json">
-      </label>
-
-      <div class="import-divider"><span>OR</span></div>
-
-      <label class="field import-paste-field" for="gpayPaste">
-        <span>Paste statement text</span>
-        <textarea id="gpayPaste" rows="4" placeholder="Paste transaction rows copied from your statement…"></textarea>
-      </label>
-
-      <div class="import-actions">
-        <button type="button" class="add-btn" id="gpayImportBtn">Import transactions</button>
-        <button type="button" class="ghost-btn" id="gpaySampleBtn">Try sample</button>
+      <div class="import-methods" role="tablist" aria-label="Import method">
+        <button type="button" class="import-method active" data-import-method="receipt" role="tab" aria-selected="true">
+          <span class="import-method-icon">▣</span>
+          <span><strong>Capture receipt</strong><small>Photo / camera</small></span>
+          <span class="import-method-arrow">→</span>
+        </button>
+        <button type="button" class="import-method" data-import-method="paste" role="tab" aria-selected="false">
+          <span class="import-method-icon">≡</span>
+          <span><strong>Paste statement</strong><small>Copy & paste text</small></span>
+          <span class="import-method-arrow">→</span>
+        </button>
+        <button type="button" class="import-method" data-import-method="file" role="tab" aria-selected="false">
+          <span class="import-method-icon">↑</span>
+          <span><strong>Add statement file</strong><small>CSV / TXT / JSON</small></span>
+          <span class="import-method-arrow">→</span>
+        </button>
       </div>
 
-      <div id="gpayImportStatus" class="import-status" aria-live="polite"></div>
-      <div id="gpayImportPreview" class="import-preview" hidden></div>
+      <div class="import-panel-wrap">
+        <div class="import-panel" data-import-panel="receipt" role="tabpanel">
+          <div class="import-panel-top">
+            <div>
+              <span class="page-label">01 · RECEIPT</span>
+              <h3>Turn a receipt into an expense.</h3>
+              <p>Take a photo or choose an image. Ledger extracts the merchant, amount, date and category for review.</p>
+            </div>
+            <span class="import-badge">LOCAL OCR</span>
+          </div>
 
-      <p class="planner-disclaimer">Ledger does not connect to or log into your bank or Google Pay. Review imported transactions before relying on your totals. Duplicate rows are automatically skipped when the same transaction is already in Ledger.</p>
-    </section>
+          <label class="import-dropzone receipt-dropzone" for="receiptFile">
+            <span class="import-drop-icon">▣</span>
+            <strong>Choose or capture a receipt</strong>
+            <small>JPG, PNG or WebP · processed on this device</small>
+            <input id="receiptFile" type="file" accept="image/*" capture="environment">
+          </label>
 
-    <section class="receipt-card" aria-labelledby="receipt-heading">
-      <div class="import-card-head">
-        <div>
-          <span class="page-label">RECEIPT SCANNER</span>
-          <h2 id="receipt-heading">Turn a receipt into an expense.</h2>
-          <p>Upload or photograph a receipt. OCR runs locally in your browser and extracts the likely merchant, amount and date for you to review.</p>
+          <div id="receiptProgress" class="receipt-progress" hidden>
+            <div class="receipt-progress-top"><span id="receiptProgressLabel">Preparing scanner…</span><strong id="receiptProgressValue">0%</strong></div>
+            <div class="progress"><span id="receiptProgressBar" class="progress-fill"></span></div>
+          </div>
+
+          <div id="receiptPreview" class="receipt-preview" hidden><img id="receiptImage" alt="Receipt preview"></div>
+
+          <div id="receiptResult" class="receipt-result" hidden>
+            <div class="receipt-result-head"><span class="page-label">REVIEW BEFORE ADDING</span><span id="receiptConfidence" class="import-badge">OCR</span></div>
+            <div class="receipt-fields">
+              <div class="field"><label for="receiptMerchant">Merchant</label><input id="receiptMerchant" type="text" placeholder="Merchant name"></div>
+              <div class="field"><label for="receiptAmount">Amount (INR)</label><div class="amount-input"><span class="currency-prefix">₹</span><input id="receiptAmount" type="number" min="0.01" step="0.01" placeholder="0.00"></div></div>
+              <div class="field"><label for="receiptDate">Date</label><input id="receiptDate" type="date"></div>
+              <div class="field"><label for="receiptCategory">Category</label><select id="receiptCategory"><option>Food</option><option>Groceries</option><option>Fuel</option><option>Bills</option><option>Transport</option><option>Housing</option><option>Leisure</option><option>Other</option></select></div>
+            </div>
+            <button type="button" class="add-btn" id="receiptAddBtn">Add receipt to Ledger</button>
+            <button type="button" class="ghost-btn" id="receiptResetBtn">Scan another receipt</button>
+          </div>
+          <div id="receiptStatus" class="import-status" aria-live="polite"></div>
+          <p class="planner-disclaimer">Always verify OCR results before adding. The receipt image and OCR text are not saved by Ledger.</p>
         </div>
-        <span class="import-badge">LOCAL OCR</span>
-      </div>
 
-      <label class="import-dropzone receipt-dropzone" for="receiptFile">
-        <span class="import-drop-icon">▣</span>
-        <strong>Choose or capture a receipt</strong>
-        <small>JPG, PNG or WebP · processed on this device</small>
-        <input id="receiptFile" type="file" accept="image/*" capture="environment">
-      </label>
-
-      <div id="receiptProgress" class="receipt-progress" hidden>
-        <div class="receipt-progress-top"><span id="receiptProgressLabel">Preparing scanner…</span><strong id="receiptProgressValue">0%</strong></div>
-        <div class="progress"><span id="receiptProgressBar" class="progress-fill"></span></div>
-      </div>
-
-      <div id="receiptPreview" class="receipt-preview" hidden>
-        <img id="receiptImage" alt="Receipt preview">
-      </div>
-
-      <div id="receiptResult" class="receipt-result" hidden>
-        <div class="receipt-result-head">
-          <span class="page-label">REVIEW BEFORE ADDING</span>
-          <span id="receiptConfidence" class="import-badge">OCR</span>
+        <div class="import-panel" data-import-panel="paste" role="tabpanel" hidden>
+          <div class="import-panel-top">
+            <div>
+              <span class="page-label">02 · STATEMENT TEXT</span>
+              <h3>Paste transactions directly.</h3>
+              <p>Copy transaction rows from your bank or Google Pay statement and let Ledger organise them.</p>
+            </div>
+            <span class="import-badge">AUTO CATEGORISE</span>
+          </div>
+          <label class="field import-paste-field" for="gpayPaste">
+            <span>Statement text</span>
+            <textarea id="gpayPaste" rows="7" placeholder="Date, Description, Amount, Type&#10;2026-09-18, Swiggy, 420, Debit&#10;2026-09-19, Indian Oil, 2000, Debit"></textarea>
+          </label>
+          <div class="import-actions">
+            <button type="button" class="add-btn" id="gpayImportBtn">Import transactions</button>
+            <button type="button" class="ghost-btn" id="gpaySampleBtn">Try sample</button>
+          </div>
+          <div id="gpayImportStatus" class="import-status" aria-live="polite"></div>
+          <div id="gpayImportPreview" class="import-preview" hidden></div>
+          <p class="planner-disclaimer">Bank / Google Pay account access is not required. Ledger only reads the text you provide.</p>
         </div>
-        <div class="receipt-fields">
-          <div class="field"><label for="receiptMerchant">Merchant</label><input id="receiptMerchant" type="text" placeholder="Merchant name"></div>
-          <div class="field"><label for="receiptAmount">Amount (INR)</label><div class="amount-input"><span class="currency-prefix">₹</span><input id="receiptAmount" type="number" min="0.01" step="0.01" placeholder="0.00"></div></div>
-          <div class="field"><label for="receiptDate">Date</label><input id="receiptDate" type="date"></div>
-          <div class="field"><label for="receiptCategory">Category</label><select id="receiptCategory"><option>Food</option><option>Groceries</option><option>Fuel</option><option>Bills</option><option>Transport</option><option>Housing</option><option>Leisure</option><option>Other</option></select></div>
-        </div>
-        <button type="button" class="add-btn" id="receiptAddBtn">Add receipt to Ledger</button>
-        <button type="button" class="ghost-btn" id="receiptResetBtn">Scan another receipt</button>
-      </div>
 
-      <div id="receiptStatus" class="import-status" aria-live="polite"></div>
-      <p class="planner-disclaimer">OCR is an assistant, not a source of truth. Always verify the merchant, amount and date before adding. The receipt image and OCR text are not saved by Ledger.</p>
+        <div class="import-panel" data-import-panel="file" role="tabpanel" hidden>
+          <div class="import-panel-top">
+            <div>
+              <span class="page-label">03 · STATEMENT FILE</span>
+              <h3>Import a statement file.</h3>
+              <p>Use a CSV, TXT or JSON export from your bank or Google Pay. Duplicate transactions are skipped.</p>
+            </div>
+            <span class="import-badge">CSV · TXT · JSON</span>
+          </div>
+          <label class="import-dropzone" for="gpayFile">
+            <span class="import-drop-icon">↑</span>
+            <strong>Choose your statement</strong>
+            <small>Nothing is uploaded · processed in this browser</small>
+            <input id="gpayFile" type="file" accept=".csv,.txt,.json,text/csv,text/plain,application/json">
+          </label>
+          <div id="gpayFileStatus" class="import-status" aria-live="polite"></div>
+          <p class="planner-disclaimer">Ledger does not connect to or log into your bank or Google Pay. Review imported transactions before relying on your totals.</p>
+        </div>
+      </div>
     </section>
 
     <section class="ledger" aria-labelledby="ledger-heading">
