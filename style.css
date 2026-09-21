@@ -1849,3 +1849,34 @@ input:focus,select:focus{box-shadow:0 0 0 3px rgba(10,10,10,.07);}
 .knowledge-home-card h2{margin:7px 0 7px;font-size:20px;letter-spacing:-.025em;}
 .knowledge-home-card p{margin:0;color:#777;font-size:12px;line-height:1.55;max-width:460px;}
 @media(max-width:680px){.knowledge-home-card{display:block}.knowledge-home-card .ai-card-btn{display:inline-flex;margin-top:16px}}
+
+
+/* Money Health card inside Insights */
+.health-score-card--insights {
+  width: 100%;
+  text-align: left;
+  font-family: var(--sans);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.health-score-card--insights:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(0,0,0,.09);
+}
+.health-score-card--insights:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+.health-card-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: #fff;
+}
+.insights-health-details {
+  margin-bottom: 14px;
+  animation: page-in .22s ease;
+}
