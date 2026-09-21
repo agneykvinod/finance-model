@@ -2091,3 +2091,30 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+
+/* ==========================================
+   COMPACT HOME INTERACTIONS
+========================================== */
+(function initCompactHome() {
+  const dateEl = document.getElementById('homeDate');
+  if (dateEl) {
+    const now = new Date();
+    dateEl.textContent = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  const expenseButton = document.getElementById('quickAddExpense');
+  const description = document.getElementById('description');
+  if (expenseButton && description) {
+    expenseButton.addEventListener('click', () => {
+      description.focus();
+      description.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  document.querySelectorAll('.nav-quick').forEach(button => {
+    button.addEventListener('click', () => {
+      if (typeof openLedgerPage === 'function') openLedgerPage(button.dataset.page, button);
+    });
+  });
+})();
