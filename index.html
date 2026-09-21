@@ -23,8 +23,13 @@
   <span id="moneyImpactText"></span>
 </div>
     <header class="app-header">
-      <p class="wordmark">Ledger</p>
-      <h1 class="tagline">Know where your money goes.</h1>
+      <div class="home-header-row">
+        <div>
+          <p class="wordmark">Ledger</p>
+          <h1 class="tagline">Know where your money goes.</h1>
+        </div>
+        <span class="home-date" id="homeDate" aria-label="Today"></span>
+      </div>
     </header>
 
           <div id="homePage" class="page-section">
@@ -47,6 +52,19 @@
         <span class="dash-label">Transactions</span>
         <span class="dash-value" id="countValue">0</span>
       </div>
+    </section>
+
+
+    <section class="quick-actions" aria-label="Quick actions">
+      <button type="button" class="quick-action" id="quickAddExpense">
+        <span class="quick-action-icon">+</span><span>Add expense</span>
+      </button>
+      <button type="button" class="quick-action nav-quick" data-page="income">
+        <span class="quick-action-icon">↑</span><span>Add income</span>
+      </button>
+      <button type="button" class="quick-action nav-quick" data-page="insights">
+        <span class="quick-action-icon">◔</span><span>Insights</span>
+      </button>
     </section>
 
     <section class="entry" aria-labelledby="entry-heading">
@@ -239,33 +257,6 @@
 
       <h3 class="breakdown-title">By category</h3>
       <div id="categoryChart" class="category-chart"></div>
-    </section>
-    <section class="knowledge-home-card" aria-labelledby="knowledge-home-heading">
-  <div>
-    <span class="ai-card-label">MONEY KNOWLEDGE</span>
-    <h2 id="knowledge-home-heading">Learn something useful about money.</h2>
-    <p>Short, practical lessons you can swipe through. Save the ideas worth remembering.</p>
-  </div>
-  <a href="knowledge.html" class="ai-card-btn">Open Money Knowledge →</a>
-</section>
-
-<section class="ai-card" aria-labelledby="ai-heading">
-
-  <div class="ai-card-content">
-    <span class="ai-card-label">LEDGER AI</span>
-
-    <h2 id="ai-heading">Have a question about your money?</h2>
-
-    <p>
-      Analyse your spending, find savings opportunities,
-      and understand your expenses.
-    </p>
-  </div>
-
-  <a href="ai.html" class="ai-card-btn">
-    Ask Ledger AI →
-  </a>
-
     </section>
           </div>        
     <section id="incomePage" class="page-section" hidden>
