@@ -31,6 +31,8 @@ const emptyState = document.getElementById('emptyState');
 const totalValue = document.getElementById('totalValue');
 const countValue = document.getElementById('countValue');
 const dashMonthValue = document.getElementById('dashMonthValue');
+const availableValue = document.getElementById('availableValue');
+const availableHint = document.getElementById('availableHint');
 const clearBtn = document.getElementById('clearBtn');
 
 const monthTotal = document.getElementById('monthTotal');
@@ -122,6 +124,9 @@ function render() {
   }
 
   renderAnalytics();
+  if (window.LedgerDashboard && typeof window.LedgerDashboard.render === 'function') {
+    window.LedgerDashboard.render();
+  }
 }
 
 function renderAnalytics() {
@@ -1366,6 +1371,10 @@ function openLedgerPage(pageName, button) {
     return;
   }
 
+  if (pageName === "profile") {
+    return;
+  }
+
   if (pageName === "transactions") {
     document.querySelectorAll(".page-section").forEach(page => { page.hidden = true; });
     const home = document.getElementById("homePage");
@@ -2121,13 +2130,140 @@ if ('serviceWorker' in navigator) {
 
 
 /* ==========================================
+   REFINED DASHBOARD HOME
+   Uses only existing Ledger data/features.
+========================================== */
+(function initDashboardOverview() {
+  const donut = document.getElementById('overviewDonut');
+  const legend = document.getElementById('overviewLegend');
+  const total = document.getElementById('overviewTotal');
+  const average = document.getElementById('overviewAverage');
+  const largest = document.getElementById('overviewLargest');
+  const top = document.getElementById('overviewTopCategory');
+  const monthCount = document.getElementById('overviewMonthCount');
+  const recentList = document.getElementById('dashboardRecentList');
+  const recentEmpty = document.getElementById('dashboardRecentEmpty');
+
+  if (!donut || !legend || !recentList) return;
+
+  const palette = ['#f7f7f5','#bdbdbd','#909090','#696969','#4f4f4f','#383838','#262626','#151515'];
+
+  function currentMonthExpenses() {
+    const now = new Date();
+    return expenses.filter(e => {
+      if (!e.date) return false;
+      const d = new Date(e.date);
+      return !Number.isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    });
+  }
+
+  function categoryData(items) {
+    const totals = {};
+    items.forEach(e => {
+      const key = e.category || 'Other';
+      totals[key] = (totals[key] || 0) + Number(e.amount || 0);
+    });
+    return Object.entries(totals).sort((a,b) => b[1] - a[1]);
+  }
+
+  function renderDashboard() {
+    const items = currentMonthExpenses();
+    const data = categoryData(items);
+    const monthTotalValue = items.reduce((s,e) => s + Number(e.amount || 0), 0);
+    const monthAverageValue = items.length ? monthTotalValue / items.length : 0;
+    const largestValue = items.length ? Math.max(...items.map(e => Number(e.amount || 0))) : 0;
+
+    total.textContent = formatCurrency(monthTotalValue);
+    average.textContent = formatCurrency(monthAverageValue);
+    largest.textContent = formatCurrency(largestValue);
+    monthCount.textContent = String(items.length);
+    top.textContent = data.length ? data[0][0] : '—';
+
+    if (!data.length) {
+      donut.style.background = 'conic-gradient(#242424 0deg 360deg)';
+      legend.innerHTML = '<span class="overview-empty">No spending this month yet.</span>';
+    } else {
+      const sum = data.reduce((s,[,v]) => s + v, 0);
+      let angle = 0;
+      const stops = [];
+      data.forEach(([name, value], index) => {
+        const next = angle + (value / sum) * 360;
+        stops.push(palette[index % palette.length] + ' ' + angle + 'deg ' + next + 'deg');
+        angle = next;
+      });
+      donut.style.background = 'conic-gradient(' + stops.join(',') + ')';
+      legend.innerHTML = data.map(([name, value], index) =>
+        '<div class="overview-legend-row"><span class="overview-dot" style="--dot:' + palette[index % palette.length] + '"></span><span>' +
+        escapeHTML(name) + '</span><strong>' + formatCurrency(value) + '</strong></div>'
+      ).join('');
+    }
+
+    const recent = [...expenses].sort((a,b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 3);
+    recentList.innerHTML = '';
+    recentEmpty.hidden = recent.length > 0;
+
+    recent.forEach(expense => {
+      const li = document.createElement('li');
+      li.className = 'dashboard-recent-row';
+      const meta = (expense.category || 'Other') + ' · ' + formatDate(expense.date);
+      li.innerHTML =
+        '<span class="recent-row-icon" aria-hidden="true">' + iconForCategory(expense.category) + '</span>' +
+        '<span class="recent-row-main"><strong>' + escapeHTML(expense.description) + '</strong><small>' + escapeHTML(meta) + '</small></span>' +
+        '<span class="recent-row-amount"><strong>' + formatCurrency(expense.amount) + '</strong><small>Expense</small></span>' +
+        '<span class="recent-row-chevron" aria-hidden="true">›</span>';
+      recentList.appendChild(li);
+    });
+  }
+
+  function iconForCategory(category) {
+    const c = String(category || '').toLowerCase();
+    if (c.includes('food')) return '♨';
+    if (c.includes('grocery')) return '▱';
+    if (c.includes('fuel')) return '⛽';
+    if (c.includes('bill')) return '▤';
+    if (c.includes('transport')) return '⌁';
+    return '◌';
+  }
+
+  window.LedgerDashboard = { render: renderDashboard };
+  renderDashboard();
+})();
+
+/* ==========================================
    COMPACT HOME INTERACTIONS
 ========================================== */
 (function initCompactHome() {
-  const dateEl = document.getElementById('homeDate');
+  const dateEl = document.getElementById('homeDateText');
+  const monthLabel = document.getElementById('dashboardMonthLabel');
+  const greeting = document.getElementById('dashboardGreeting');
   if (dateEl) {
     const now = new Date();
     dateEl.textContent = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    if (monthLabel) monthLabel.textContent = now.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+    if (greeting) {
+      const hour = now.getHours();
+      greeting.textContent = hour < 12 ? 'Good morning,' : hour < 17 ? 'Good afternoon,' : 'Good evening,';
+    }
+  }
+
+  const quickCategories = document.getElementById('quickCategories');
+  const viewAnalytics = document.getElementById('viewAnalyticsBtn');
+  const viewAll = document.getElementById('viewAllTransactions');
+
+  if (quickCategories) {
+    quickCategories.addEventListener('click', () => {
+      document.querySelector('.monthly-overview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (viewAnalytics) {
+    viewAnalytics.addEventListener('click', () => {
+      document.querySelector('.analytics')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+  if (viewAll) {
+    viewAll.addEventListener('click', () => {
+      document.querySelector('.ledger')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   const expenseButton = document.getElementById('quickAddExpense');
