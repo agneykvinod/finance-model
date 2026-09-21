@@ -1349,7 +1349,6 @@ const PAGE_IDS = {
   home: "homePage",
   income: "incomePage",
   insights: "insightsPage",
-  health: "healthPage",
 };
 
 function openLedgerPage(pageName, button) {
@@ -1383,22 +1382,38 @@ function openLedgerPage(pageName, button) {
     updateMoneyAnalysis();
   }
 
-  if (pageName === "health") {
+  if (pageName === "insights") {
+    if (window.LedgerPlanner) {
+      try {
+        window.LedgerPlanner.render();
+      } catch (err) {
+        console.error("Could not refresh the investment planner:", err);
+      }
+    }
     if (window.LedgerHealth && typeof window.LedgerHealth.render === "function") {
       window.LedgerHealth.render();
     }
   }
 
-  if (pageName === "insights" && window.LedgerPlanner) {
-    try {
-      window.LedgerPlanner.render();
-    } catch (err) {
-      console.error("Could not refresh the investment planner:", err);
-    }
-  }
-
   window.scrollTo(0, 0);
 }
+
+// Insights Money Health card — keeps the compact card visible and reveals
+// the existing detailed health breakdown only when the user asks for it.
+(function initInsightsHealthCard() {
+  const card = document.getElementById("insightsHealthCard");
+  const details = document.getElementById("insightsHealthDetails");
+  if (!card || !details) return;
+
+  card.addEventListener("click", () => {
+    const expanded = card.getAttribute("aria-expanded") === "true";
+    card.setAttribute("aria-expanded", String(!expanded));
+    details.hidden = expanded;
+    if (!expanded && window.LedgerHealth && typeof window.LedgerHealth.render === "function") {
+      window.LedgerHealth.render();
+    }
+  });
+})();
 
 // Delegated navigation keeps the buttons working even if the nav is
 // re-rendered or the page structure changes later.
