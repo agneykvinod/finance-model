@@ -34,26 +34,12 @@
 
           <div id="homePage" class="page-section">
 
-   <section class="dashboard" aria-live="polite">
-      <div class="dash-card dash-card--primary">
-        <span class="dash-label">Available</span>
-        <span class="dash-value" id="availableValue">₹0.00</span>
-        <span class="dash-subvalue" id="availableHint">Income minus recorded spending</span>
-      </div>
-      <div class="dash-card">
-        <span class="dash-label">Total spent</span>
-        <span class="dash-value" id="totalValue">₹0.00</span>
-      </div>
-      <div class="dash-card">
-        <span class="dash-label">This month</span>
-        <span class="dash-value" id="dashMonthValue">₹0.00</span>
-      </div>
-      <div class="dash-card">
-        <span class="dash-label">Transactions</span>
-        <span class="dash-value" id="countValue">0</span>
-      </div>
+   <section class="dashboard dashboard--dark" aria-live="polite">
+      <div class="dash-card dash-card--primary"><span class="dash-label">Available</span><span class="dash-value" id="availableValue">₹0.00</span><span class="dash-subvalue" id="availableHint">Add income to see your available balance</span></div>
+      <div class="dash-card"><span class="dash-label">Total spent</span><span class="dash-value" id="totalValue">₹0.00</span><span class="dash-meta">All recorded spending</span></div>
+      <div class="dash-card"><span class="dash-label">This month</span><span class="dash-value" id="dashMonthValue">₹0.00</span><span class="dash-meta">Current month</span></div>
+      <div class="dash-card"><span class="dash-label">Transactions</span><span class="dash-value" id="countValue">0</span><span class="dash-meta">All recorded</span></div>
     </section>
-
 
     <section class="quick-actions" aria-label="Quick actions">
       <button type="button" class="quick-action" id="quickAddExpense">
@@ -582,30 +568,13 @@
 
     </section>
 
-    <nav class="bottom-nav" aria-label="Main navigation">
-
-  <button class="nav-btn active" data-page="home">
-    <span>⌂</span>
-    <small>Home</small>
-  </button>
-
-  <button class="nav-btn" data-page="income">
-    <span>₹</span>
-    <small>Income</small>
-  </button>
-
-  <button class="nav-btn" data-page="insights">
-    <span>◈</span>
-    <small>Insights</small>
-  </button>
-
-  <button class="nav-btn" data-page="ai">
-    <span>✦</span>
-    <small>AI</small>
-  </button>
-
-      </nav>
-      
+    <nav class="bottom-nav bottom-nav--dashboard" aria-label="Main navigation">
+      <button class="nav-btn active" data-page="home" aria-current="page"><span>⌂</span><small>Home</small></button>
+      <button class="nav-btn" data-page="transactions"><span>≡</span><small>Transactions</small></button>
+      <button class="nav-btn nav-btn--add" data-page="add" aria-label="Add expense"><span>＋</span></button>
+      <button class="nav-btn" data-page="insights"><span>◔</span><small>Insights</small></button>
+      <button class="nav-btn" data-page="ai"><span>🐼</span><small>AI</small></button>
+    </nav>      
     <footer class="app-footer">
       <button id="clearBtn" class="clear-btn" type="button">Clear all</button>
       <span class="version-tag">Ledger 2.0</span>
