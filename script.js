@@ -2281,3 +2281,90 @@ if ('serviceWorker' in navigator) {
     });
   });
 })();
+
+/* =========================================================
+   MSME BUSINESS DASHBOARD
+   Local prototype data model. Future modules can write to
+   these same localStorage collections without changing the UI.
+========================================================= */
+(function initMsmeDashboard(){
+  const KEYS={
+    products:'msme.products',
+    sales:'msme.sales',
+    purchases:'msme.purchases',
+    customers:'msme.customers',
+    suppliers:'msme.suppliers'
+  };
+  const read=(key)=>{
+    try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):[];}catch(e){return [];}
+  };
+  const money=(n)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(Number(n)||0);
+
+  function render(){
+    const products=read(KEYS.products),sales=read(KEYS.sales),purchases=read(KEYS.purchases);
+    const salesTotal=sales.reduce((s,x)=>s+Number(x.total||x.amount||0),0);
+    const purchaseTotal=purchases.reduce((s,x)=>s+Number(x.total||x.amount||0),0);
+    const profit=sales.reduce((s,x)=>s+Number(x.profit||0),0);
+    const units=products.reduce((s,x)=>s+Number(x.stock||0),0);
+    const stockValue=products.reduce((s,x)=>s+(Number(x.stock)||0)*(Number(x.costPrice||x.purchasePrice||0)),0);
+    const low=products.filter(x=>Number(x.stock||0)<=Number(x.minStock||5));
+
+    const set=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+    set('msmeSalesValue',money(salesTotal));
+    set('msmePurchasesValue',money(purchaseTotal));
+    set('msmeProfitValue',money(profit));
+    set('msmeStockValue',products.length);
+    set('msmeSalesMeta',sales.length?sales.length+' sale'+(sales.length===1?'':'s')+' recorded':'No sales recorded');
+    set('msmePurchasesMeta',purchases.length?purchases.length+' purchase'+(purchases.length===1?'':'s')+' recorded':'No purchases recorded');
+    set('msmeStockMeta',products.length?units.toLocaleString('en-IN')+' units in stock':'Add products to begin');
+    set('msmeUnits',units.toLocaleString('en-IN'));
+    set('msmeInventoryValue',money(stockValue));
+    set('msmeLowStock',low.length);
+
+    const alertBox=document.getElementById('msmeAlerts'),count=document.getElementById('msmeAlertCount');
+    if(alertBox){
+      const alerts=[];
+      low.forEach(p=>alerts.push({title:p.name||'Unnamed product',text:'Only '+Number(p.stock||0)+' units left'}));
+      const receivable=sales.reduce((s,x)=>s+Number(x.outstanding||0),0);
+      if(receivable>0) alerts.push({title:'Outstanding customer payments',text:money(receivable)+' to collect'});
+      if(count)count.textContent=String(alerts.length);
+      alertBox.innerHTML=alerts.length?alerts.slice(0,4).map(a=>'<div class="msme-empty-alert"><span>!</span><div><strong>'+escapeHTML(a.title)+'</strong><small>'+escapeHTML(a.text)+'</small></div></div>').join(''):'<div class="msme-empty-alert"><span>✓</span><div><strong>No alerts yet</strong><small>Low stock, overdue payments and other issues will appear here.</small></div></div>';
+    }
+
+    const stockList=document.getElementById('msmeLowStockList');
+    if(stockList)stockList.innerHTML=low.length?low.slice(0,5).map(p=>'<div class="msme-empty-row"><span>▦</span><div><strong>'+escapeHTML(p.name||'Unnamed product')+'</strong><small>'+Number(p.stock||0)+' units left · Reorder at '+Number(p.minStock||5)+'</small></div></div>').join(''):'<div class="msme-empty-row"><span>▦</span><div><strong>No products yet</strong><small>Add products to start managing stock.</small></div></div>';
+
+    const recent=document.getElementById('msmeRecentSales');
+    if(recent){
+      const sorted=[...sales].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0)).slice(0,4);
+      recent.innerHTML=sorted.length?sorted.map(s=>'<div class="msme-empty-row"><span>₹</span><div><strong>'+escapeHTML(s.invoice||s.invoiceNumber||'Sale')+'</strong><small>'+escapeHTML(s.customer||'Walk-in customer')+' · '+money(s.total||s.amount||0)+'</small></div></div>').join(''):'<div class="msme-empty-row"><span>₹</span><div><strong>No sales yet</strong><small>Your latest invoices will appear here.</small></div></div>';
+    }
+
+    const chartEmpty=document.getElementById('msmeChartEmpty'),bars=document.getElementById('msmeChartBars');
+    if(chartEmpty&&bars){
+      const days=Array.from({length:7},(_,i)=>({label:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i],value:0}));
+      sales.forEach(s=>{const d=new Date(s.date||0);if(!Number.isNaN(d.getTime())){const day=(d.getDay()+6)%7;days[day].value+=Number(s.total||s.amount||0);}});
+      const max=Math.max(...days.map(d=>d.value),0);
+      if(max>0){chartEmpty.hidden=true;bars.hidden=false;bars.innerHTML=days.map(d=>'<div class="msme-bar"><i style="height:'+Math.max(8,(d.value/max)*140)+'px"></i><small>'+d.label+'</small></div>').join('');}
+      else{chartEmpty.hidden=false;bars.hidden=true;}
+    }
+  }
+
+  window.LedgerMSME={render,keys:KEYS};
+
+  document.addEventListener('click',(event)=>{
+    const button=event.target.closest('[data-msme-module]');
+    if(!button)return;
+    const module=button.dataset.msmeModule;
+    if(module==='more'){
+      alert('Business modules coming next: Purchases, Customers, Suppliers, Payments and Reports.');
+      return;
+    }
+    const names={sale:'Sales & invoicing',purchase:'Purchases & stock receiving',product:'Products & inventory',customer:'Customers',supplier:'Suppliers',inventory:'Inventory & stock',reports:'Reports'};
+    alert((names[module]||'This module')+' is the next module in the build.');
+  });
+
+  const date=document.getElementById('msmeDateLabel');
+  if(date)date.textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  render();
+})();
