@@ -2573,16 +2573,55 @@ if ('serviceWorker' in navigator) {
     if(t.dataset.printInvoice)printInvoice(t.dataset.printInvoice);
   });
   $('barcodeManualForm')?.addEventListener('submit',event=>{event.preventDefault();const input=$('barcodeManualInput');if(addScannedItem(input?.value||'')){if(input)input.value='';input?.focus();}});
+  $('msmeProductForm')?.addEventListener('invalid',event=>{
+    const field=event.target;
+    const label=field?.labels?.[0]?.textContent?.replace('*','').trim()||'a required field';
+    const message=$('productFormStatus');
+    if(message)message.textContent='Please check '+label+'. Fill in all required fields with valid values.';
+  },true);
   $('msmeProductForm')?.addEventListener('submit',event=>{
     event.preventDefault();
-    const list=products(),editId=$('productEditId').value,name=$('productName').value.trim(),sku=$('productSku').value.trim();
-    if(!name){$('productName').focus();return;}
-    if(sku&&list.some(p=>String(p.sku||'').toLowerCase()===sku.toLowerCase()&&String(p.id)!==String(editId))){$('productFormStatus').textContent='That SKU is already in use. Choose a unique item code.';return;}
-    const values={name,sku,barcode:$('productBarcode').value.trim(),category:$('productCategory').value.trim(),unit:$('productUnit').value,costPrice:Number($('productCost').value),purchasePrice:Number($('productCost').value),sellingPrice:Number($('productPrice').value),stock:Number($('productOpeningStock').value),minStock:Number($('productMinStock').value)};
-    if(Object.values(values).some(v=>typeof v==='number'&&(!Number.isFinite(v)||v<0))){$('productFormStatus').textContent='Prices and quantities must be zero or greater.';return;}
-    if(editId){const p=list.find(x=>String(x.id)===String(editId));if(!p)return;Object.assign(p,values);$('productFormStatus').textContent='Product updated.';}
-    else{values.id='prd-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);values.createdAt=new Date().toISOString();list.push(values);$('productFormStatus').textContent='Product added to inventory.';}
-    save(KEYS.products,list);resetProductForm();renderProducts();$('productFormStatus').textContent=editId?'Item updated successfully.':'Item added to inventory.';
+    const form=$('msmeProductForm'),message=$('productFormStatus');
+    const list=products(),editId=$('productEditId').value;
+    const name=$('productName').value.trim(),sku=$('productSku').value.trim();
+    const fail=(text,field)=>{if(message)message.textContent=text;if(field)field.focus();};
+    if(!name)return fail('Enter an item name.',$('productName'));
+    if(!sku)return fail('Item code is required. Enter a unique code such as WAT-001.',$('productSku'));
+    const normaliseCode=value=>String(value??'').trim().toLocaleLowerCase();
+    if(list.some(p=>normaliseCode(p.sku||p.itemCode)===normaliseCode(sku)&&String(p.id)!==String(editId))){
+      return fail('This item code is already in use. Enter a different code.',$('productSku'));
+    }
+    const costRaw=$('productCost').value.trim(),priceRaw=$('productPrice').value.trim();
+    const stockRaw=$('productOpeningStock').value.trim(),minRaw=$('productMinStock').value.trim();
+    if(costRaw===''||priceRaw===''||stockRaw===''||minRaw===''){
+      const field=costRaw===''?$('productCost'):priceRaw===''?$('productPrice'):stockRaw===''?$('productOpeningStock'):$('productMinStock');
+      return fail('Complete all required price and stock fields before saving.',field);
+    }
+    const values={name,sku,barcode:$('productBarcode').value.trim(),category:$('productCategory').value.trim(),unit:$('productUnit').value||'pcs',costPrice:Number(costRaw),purchasePrice:Number(costRaw),sellingPrice:Number(priceRaw),stock:Number(stockRaw),minStock:Number(minRaw)};
+    if(Object.values(values).some(v=>typeof v==='number'&&(!Number.isFinite(v)||v<0))){
+      return fail('Prices and quantities must be valid numbers greater than or equal to zero.',null);
+    }
+    if(!Number.isInteger(values.stock)||!Number.isInteger(values.minStock)){
+      return fail('Stock quantity and low-stock threshold must be whole numbers.',!Number.isInteger(values.stock)?$('productOpeningStock'):$('productMinStock'));
+    }
+    if(editId){
+      const product=list.find(p=>String(p.id)===String(editId));
+      if(!product)return fail('Could not find the item being edited. Cancel and try again.',null);
+      Object.assign(product,values);
+    }else{
+      values.id='prd-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
+      values.createdAt=new Date().toISOString();
+      list.push(values);
+    }
+    try{
+      save(KEYS.products,list);
+      renderProducts();
+      resetProductForm();
+      if(message)message.textContent=editId?'Item updated successfully.':'Item saved successfully.';
+    }catch(error){
+      console.error('Could not save inventory item:',error);
+      return fail('Could not save on this device. Check browser storage/private mode and available space, then try again.',null);
+    }
   });
   $('msmeInvoiceForm')?.addEventListener('submit',createInvoice);
   $('invoiceLines')?.addEventListener('change',event=>{
