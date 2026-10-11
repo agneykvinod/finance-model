@@ -2568,3 +2568,230 @@ label,.page-header p,.planner-note,.planner-disclaimer{color:#999!important}
 .msme-nav .nav-icon{font-size:1.3rem!important}
 @media(max-width:800px){.msme-kpis{grid-template-columns:repeat(2,1fr)}.msme-actions{grid-template-columns:repeat(3,1fr)}.msme-main-grid{grid-template-columns:1fr}.msme-intelligence{align-items:flex-start;flex-direction:column}.msme-intelligence-items{justify-content:flex-start}.msme-business-switcher{min-width:170px}}
 @media(max-width:520px){.msme-hero{align-items:flex-start;flex-direction:column}.msme-business-switcher{width:100%}.msme-kpi{min-height:126px;padding:14px}.msme-kpi strong{font-size:1.22rem}.msme-kpi-icon{width:35px;height:35px}.msme-actions{gap:6px}.msme-action{min-height:83px;padding:8px 3px}.msme-action strong{font-size:.66rem}.msme-action small{font-size:.54rem}.msme-stock-summary strong{font-size:.84rem}.msme-panel{padding:14px}}
+
+
+/* =========================================================
+   LEDGER BUSINESS — Zoho Books-inspired workspace refresh
+   Light accounting UI, blue action colour, compact tables/cards.
+   Original product branding and data behaviour remain unchanged.
+========================================================= */
+:root{
+  --msme-blue:#1677d2;
+  --msme-blue-dark:#0b5cad;
+  --msme-bg:#f4f7fb;
+  --msme-surface:#ffffff;
+  --msme-surface2:#f8fafc;
+  --msme-border:#dfe6ee;
+  --msme-border2:#e9eef4;
+  --msme-text:#202b3c;
+  --msme-muted:#66758a;
+  --msme-soft:#8491a3;
+}
+html{background:#f4f7fb}
+body{
+  display:block!important;
+  min-height:100vh;
+  padding:0 0 28px!important;
+  background:#f4f7fb!important;
+  color:#202b3c!important;
+}
+.app{
+  width:auto!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0 30px 36px 270px!important;
+}
+.app-header{
+  position:sticky;
+  top:0;
+  z-index:30;
+  margin:0 -30px 24px -270px;
+  padding:0 30px 0 270px!important;
+  background:#fff;
+  border-bottom:1px solid #dfe6ee;
+  box-shadow:0 2px 7px rgba(27,49,76,.035);
+}
+.dashboard-header{
+  min-height:66px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.menu-mark{
+  display:none!important;
+}
+.brand-lockup{display:flex;align-items:center;gap:10px;min-width:190px}
+.wordmark{
+  margin:0!important;
+  color:#1677d2!important;
+  font-size:1.12rem!important;
+  letter-spacing:-.045em!important;
+  font-weight:800!important;
+}
+.tagline{
+  margin:0!important;
+  color:#8794a5!important;
+  font-size:.73rem!important;
+  font-weight:500!important;
+  letter-spacing:0!important;
+}
+.top-ai-link{margin-left:auto}
+.panda-mini{filter:none}
+.notification-btn{border-color:#e0e7ef!important;color:#53647a!important;background:#fff!important}
+.page-section{max-width:1500px;margin:0 auto}
+.msme-shell{gap:20px!important;color:#202b3c!important}
+.msme-hero{
+  align-items:center!important;
+  padding:4px 0 0!important;
+}
+.msme-eyebrow{color:#77879b!important;font-size:.64rem!important;letter-spacing:.1em!important}
+.msme-hero h1{font-size:1.8rem!important;line-height:1.2!important;color:#202b3c!important;letter-spacing:-.035em!important;font-weight:500!important}
+.msme-hero h1 strong{color:#202b3c!important;font-weight:700!important}
+.msme-hero-copy p{color:#758398!important;font-size:.8rem!important}
+.msme-business-switcher{
+  background:#fff!important;border:1px solid #dfe6ee!important;border-radius:8px!important;
+  min-width:220px!important;padding:9px 12px!important;box-shadow:0 1px 2px rgba(20,40,70,.025)
+}
+.msme-business-avatar{background:#e7f2ff!important;color:#1677d2!important;border-radius:8px!important}
+.msme-business-switcher strong{color:#26364a!important;font-size:.8rem!important}
+.msme-business-switcher small{color:#8592a3!important}
+.msme-chevron{color:#758398!important}
+.msme-kpis{gap:14px!important}
+.msme-kpi,.msme-kpi--primary{
+  min-height:125px!important;padding:18px!important;
+  border:1px solid #dfe6ee!important;border-radius:9px!important;
+  background:#fff!important;box-shadow:0 1px 3px rgba(24,48,78,.035)!important;
+}
+.msme-kpi span:first-child{color:#728198!important;font-size:.68rem!important;letter-spacing:.045em!important}
+.msme-kpi strong{margin-top:14px!important;color:#202b3c!important;font-size:1.65rem!important;letter-spacing:-.035em!important}
+.msme-kpi small{color:#8793a4!important;font-size:.69rem!important}
+.msme-kpi-icon{
+  right:14px!important;bottom:auto!important;top:14px!important;width:31px!important;height:31px!important;
+  background:#eef6ff!important;border:0!important;border-radius:8px!important;color:#1677d2!important;
+}
+.msme-panel{
+  border:1px solid #dfe6ee!important;border-radius:9px!important;
+  background:#fff!important;padding:20px!important;
+  box-shadow:0 1px 3px rgba(24,48,78,.035)!important;
+}
+.msme-section-heading{margin-bottom:17px!important}
+.msme-section-heading h2{color:#25354a!important;font-size:1rem!important;font-weight:650!important}
+.msme-period-btn{
+  border:1px solid #dce5ef!important;background:#fff!important;color:#5d6c80!important;
+  border-radius:6px!important;padding:8px 11px!important;font-size:.72rem!important
+}
+.msme-link-btn{color:#1677d2!important;font-weight:600!important}
+.msme-actions{gap:10px!important}
+.msme-action{
+  min-height:94px!important;border:1px solid #e0e7ef!important;border-radius:8px!important;
+  background:#fff!important;color:#2c3a4d!important;
+}
+.msme-action:hover{background:#f7fbff!important;border-color:#9bc8f1!important;transform:translateY(-1px)}
+.msme-action-symbol{
+  width:33px!important;height:33px!important;background:#edf6ff!important;border:0!important;
+  border-radius:8px!important;color:#1677d2!important
+}
+.msme-action strong{color:#344257!important;font-size:.73rem!important}
+.msme-action small{color:#8a96a7!important}
+.msme-main-grid{gap:18px!important}
+.msme-chart{border-top:1px solid #edf1f6!important}
+.msme-chart-ring{border-color:#dce8f5!important;background:radial-gradient(circle,#fff 56%,#dcecff 57%,#eaf4ff 72%,#fff 73%)!important;color:#1677d2!important}
+.msme-chart-empty strong{color:#435268!important}
+.msme-chart-empty small{color:#8995a5!important}
+.msme-bar i{background:#4b9be7!important}
+.msme-bar small{color:#7d8a9d!important}
+.msme-alert-count{background:#eaf4ff!important;color:#1677d2!important}
+.msme-empty-alert,.msme-empty-row{
+  border:1px solid #e7edf4!important;border-radius:7px!important;background:#fff!important
+}
+.msme-empty-alert>span{background:#fff4e5!important;color:#c47a18!important}
+.msme-empty-alert strong,.msme-empty-row strong{color:#35445a!important}
+.msme-empty-alert small,.msme-empty-row small{color:#8592a3!important}
+.msme-stock-summary div{border:1px solid #e6edf4!important;border-radius:7px!important;background:#f9fbfd!important}
+.msme-stock-summary span{color:#7e8b9e!important}
+.msme-stock-summary strong{color:#26364a!important}
+.msme-intelligence{
+  background:#f0f7ff!important;border-color:#d7e9fb!important;box-shadow:none!important
+}
+.msme-intelligence h2{color:#263d59!important}
+.msme-intelligence p{color:#6c7e94!important}
+.msme-intelligence-items span{border-color:#d4e5f6!important;color:#4d6c8f!important;background:#fff!important}
+#legacyLedgerBridge{display:none!important}
+
+/* Desktop accounting navigation rail */
+.msme-nav{
+  position:fixed!important;z-index:40!important;
+  left:0!important;top:66px!important;bottom:0!important;
+  width:240px!important;height:auto!important;
+  transform:none!important;display:flex!important;flex-direction:column!important;
+  align-items:stretch!important;justify-content:flex-start!important;gap:4px!important;
+  padding:18px 12px!important;margin:0!important;
+  border:0!important;border-right:1px solid #dfe6ee!important;border-radius:0!important;
+  background:#fff!important;box-shadow:none!important;backdrop-filter:none!important;
+}
+.msme-nav .nav-btn{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:12px!important;width:100%!important;min-height:42px!important;height:42px!important;
+  padding:0 14px!important;border:0!important;border-radius:7px!important;
+  background:transparent!important;color:#617188!important;text-align:left!important;
+}
+.msme-nav .nav-btn .nav-icon{width:21px!important;text-align:center!important;font-size:1.15rem!important}
+.msme-nav .nav-btn small{margin:0!important;font-size:.82rem!important;font-weight:500!important}
+.msme-nav .nav-btn.active{background:#eaf4ff!important;color:#126fc4!important}
+.msme-nav .nav-btn.active small{font-weight:650!important}
+.msme-nav .nav-btn--add{
+  order:10!important;width:100%!important;height:43px!important;min-height:43px!important;
+  margin-top:12px!important;border-radius:7px!important;border:0!important;
+  background:#1677d2!important;color:#fff!important;box-shadow:none!important
+}
+.msme-nav .nav-btn--add span{font-size:1.25rem!important}
+.msme-nav .nav-btn--add::after{content:"New sale";font-size:.82rem;font-weight:650}
+.msme-nav .nav-btn--more{margin-top:4px!important}
+.app-footer{display:none!important}
+@media(max-width:900px){
+  .app{padding:0 18px 105px!important}
+  .app-header{margin:0 -18px 22px!important;padding:0 18px!important}
+  .msme-nav{
+    top:auto!important;bottom:0!important;left:0!important;right:0!important;
+    width:100%!important;height:auto!important;min-height:66px!important;
+    flex-direction:row!important;justify-content:space-around!important;align-items:center!important;
+    gap:3px!important;padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px))!important;
+    border-right:0!important;border-top:1px solid #dfe6ee!important;
+    background:rgba(255,255,255,.97)!important;box-shadow:0 -5px 20px rgba(30,55,85,.06)!important;
+  }
+  .msme-nav .nav-btn{
+    width:auto!important;flex:1!important;min-width:0!important;min-height:48px!important;height:48px!important;
+    flex-direction:column!important;justify-content:center!important;gap:3px!important;padding:4px 2px!important;
+    border-radius:7px!important;
+  }
+  .msme-nav .nav-btn .nav-icon{width:auto!important;font-size:1.25rem!important}
+  .msme-nav .nav-btn small{font-size:.62rem!important}
+  .msme-nav .nav-btn--add{order:0!important;flex:0 0 48px!important;width:48px!important;height:48px!important;min-height:48px!important;margin:0!important;border-radius:50%!important}
+  .msme-nav .nav-btn--add::after{display:none!important}
+  .msme-nav .nav-btn--add span{font-size:1.7rem!important}
+}
+@media(max-width:600px){
+  .app{padding:0 12px 100px!important}
+  .app-header{margin:0 -12px 19px!important;padding:0 12px!important}
+  .dashboard-header{min-height:58px!important;gap:9px!important}
+  .brand-lockup{min-width:0!important;gap:8px!important}
+  .wordmark{font-size:1.05rem!important}
+  .tagline{font-size:.67rem!important}
+  .msme-hero{gap:13px!important}
+  .msme-hero h1{font-size:1.55rem!important}
+  .msme-business-switcher{min-width:0!important;width:100%!important}
+  .msme-kpis{gap:9px!important}
+  .msme-kpi{min-height:112px!important;padding:13px!important}
+  .msme-kpi strong{font-size:1.28rem!important;margin-top:14px!important}
+  .msme-kpi small{font-size:.63rem!important;max-width:90%!important}
+  .msme-kpi-icon{top:10px!important;right:10px!important;width:26px!important;height:26px!important}
+  .msme-panel{padding:14px!important}
+  .msme-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  .msme-action{min-height:84px!important}
+  .msme-action strong{font-size:.72rem!important}
+  .msme-action small{font-size:.61rem!important}
+  .msme-stock-summary{grid-template-columns:1fr 1fr!important}
+  .msme-stock-summary div:last-child{grid-column:1/-1}
+  .msme-stock-summary strong{font-size:.9rem!important}
+  .msme-chart{min-height:220px!important}
+}
