@@ -1360,7 +1360,7 @@ render();
 ========================================= */
 
 const PAGE_IDS = {
-  home: "homePage",
+  home: "salesPage",
   income: "incomePage",
   insights: "insightsPage",
 };
@@ -1472,7 +1472,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // re-rendered or the page structure changes later.
 document.addEventListener("click", event => {
   const button = event.target.closest(".nav-btn");
-  if (!button) return;
+  if (!button || !button.dataset.page) return;
   event.preventDefault();
   openLedgerPage(button.dataset.page, button);
 });
@@ -2381,6 +2381,7 @@ if ('serviceWorker' in navigator) {
   const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
   let lines=[newLine()];
+  let lastInvoiceId=null;
   function newLine(){return {productId:'',qty:1,price:0};}
   function products(){return read(KEYS.products);}
   function sales(){return read(KEYS.sales);}
@@ -2416,6 +2417,7 @@ if ('serviceWorker' in navigator) {
     if($('invoiceDiscountView'))$('invoiceDiscountView').textContent='−'+money(discount);
     if($('invoiceTotal'))$('invoiceTotal').textContent=money(total);
     if($('invoiceBalance'))$('invoiceBalance').textContent=money(Math.max(0,total-paid));
+    if($('invoicePaidView'))$('invoicePaidView').textContent=money(Math.min(total,paid));
     document.querySelectorAll('#invoiceLines tr').forEach((row,index)=>{const cell=row.querySelector('.invoice-line-total');if(cell&&lines[index])cell.textContent=money((Number(lines[index].qty)||0)*(Number(lines[index].price)||0));});
     return {subtotal,discount,total,paid};
   }
@@ -2431,7 +2433,7 @@ if ('serviceWorker' in navigator) {
     if($('inventoryLowCount'))$('inventoryLowCount').textContent=low.length;
     if($('productTableBody'))$('productTableBody').innerHTML=filtered.map(p=>{
       const isLow=Number(p.stock||0)<=Number(p.minStock??5);
-      return '<tr><td><strong>'+esc(p.name)+'</strong><small class="msme-cell-sub">'+esc(p.category||'Uncategorised')+' · '+esc(p.unit||'pcs')+'</small></td><td>'+esc(p.sku||'—')+'</td><td>'+money(p.costPrice)+'</td><td>'+money(p.sellingPrice)+'</td><td>'+Number(p.stock||0)+'</td><td>'+money(Number(p.stock||0)*Number(p.costPrice||0))+'</td><td><span class="msme-tag '+(isLow?'msme-tag--warning':'msme-tag--ok')+'">'+(isLow?'Low stock':'In stock')+'</span></td><td><div class="msme-row-actions"><button type="button" class="msme-table-action" data-edit-product="'+esc(p.id)+'">Edit</button><button type="button" class="msme-table-action msme-table-action--danger" data-delete-product="'+esc(p.id)+'">Delete</button></div></td></tr>';
+      return '<tr><td><strong>'+esc(p.name)+'</strong></td><td>'+esc(p.sku||'—')+'</td><td>'+money(p.costPrice)+'</td><td>'+money(p.sellingPrice)+'</td><td><strong>'+Number(p.stock||0)+'</strong></td><td><span class="msme-tag '+(isLow?'msme-tag--warning':'msme-tag--ok')+'">'+(isLow?'Low stock':'In stock')+'</span></td><td><div class="msme-row-actions"><button type="button" class="msme-table-action" data-edit-product="'+esc(p.id)+'">Edit</button><button type="button" class="msme-table-action msme-table-action--danger" data-delete-product="'+esc(p.id)+'">Delete</button></div></td></tr>';
     }).join('');
     if($('productTableEmpty'))$('productTableEmpty').hidden=filtered.length>0;
     if(window.LedgerMSME)window.LedgerMSME.render();
@@ -2498,8 +2500,10 @@ if ('serviceWorker' in navigator) {
     items.forEach(item=>{const p=list.find(x=>String(x.id)===String(item.productId));p.stock=Number((Number(p.stock||0)-item.qty).toFixed(3));});
     save(KEYS.products,list);invoiceList.push(invoice);save(KEYS.sales,invoiceList);
     renderProducts();renderSales();if(window.LedgerMSME)window.LedgerMSME.render();
-    status('Invoice '+invoiceNo+' saved. Stock quantities have been updated.');
+    lastInvoiceId=invoice.id;
+    if($('printLatestInvoice'))$('printLatestInvoice').hidden=false;
     resetInvoiceForm();renderSales();
+    status('Bill '+invoiceNo+' saved. Stock has been updated.');
   }
   function printInvoice(id){
     const inv=sales().find(x=>String(x.id)===String(id));if(!inv)return;
@@ -2513,6 +2517,7 @@ if ('serviceWorker' in navigator) {
   document.addEventListener('click',event=>{
     const t=event.target.closest('button');if(!t)return;
     if(t.id==='focusNewInvoice'){setPage('sales');$('invoiceEditor')?.scrollIntoView({behavior:'smooth'});$('invoiceCustomer')?.focus();}
+    if(t.id==='printLatestInvoice'&&lastInvoiceId)printInvoice(lastInvoiceId);
     if(t.id==='focusAddProduct'){setPage('inventory');$('productEditor')?.scrollIntoView({behavior:'smooth'});$('productName')?.focus();}
     if(t.id==='addInvoiceLine'){lines.push(newLine());renderLineRows();}
     if(t.classList.contains('remove-invoice-line')){const row=t.closest('tr');if(row&&lines.length>1){lines.splice(Number(row.dataset.lineIndex),1);renderLineRows();}}
@@ -2541,7 +2546,7 @@ if ('serviceWorker' in navigator) {
     if(Object.values(values).some(v=>typeof v==='number'&&(!Number.isFinite(v)||v<0))){$('productFormStatus').textContent='Prices and quantities must be zero or greater.';return;}
     if(editId){const p=list.find(x=>String(x.id)===String(editId));if(!p)return;Object.assign(p,values);$('productFormStatus').textContent='Product updated.';}
     else{values.id='prd-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);values.createdAt=new Date().toISOString();list.push(values);$('productFormStatus').textContent='Product added to inventory.';}
-    save(KEYS.products,list);resetProductForm();renderProducts();$('productFormStatus').textContent=editId?'Product updated.':'Product added to inventory.';
+    save(KEYS.products,list);resetProductForm();renderProducts();$('productFormStatus').textContent=editId?'Item updated successfully.':'Item added to inventory.';
   });
   $('msmeInvoiceForm')?.addEventListener('submit',createInvoice);
   $('invoiceLines')?.addEventListener('change',event=>{
