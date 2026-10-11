@@ -2356,12 +2356,11 @@ if ('serviceWorker' in navigator) {
     const button=event.target.closest('[data-msme-module]');
     if(!button)return;
     const module=button.dataset.msmeModule;
-    if(module==='more'){
-      alert('Business modules coming next: Purchases, Customers, Suppliers, Payments and Reports.');
-      return;
+    if(window.LedgerBusinessPages && window.LedgerBusinessPages.open){
+      if(['sale','inventory','product'].includes(module)){window.LedgerBusinessPages.open(module);return;}
     }
-    const names={sale:'Sales & invoicing',purchase:'Purchases & stock receiving',product:'Products & inventory',customer:'Customers',supplier:'Suppliers',inventory:'Inventory & stock',reports:'Reports'};
-    alert((names[module]||'This module')+' is the next module in the build.');
+    const names={purchase:'Purchases',customer:'Customers',supplier:'Suppliers',reports:'Reports',more:'More business modules'};
+    alert((names[module]||'This module')+' will be built next.');
   });
 
   const date=document.getElementById('msmeDateLabel');
