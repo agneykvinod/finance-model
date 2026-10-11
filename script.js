@@ -2402,7 +2402,7 @@ if ('serviceWorker' in navigator) {
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){scannerStatus('Camera access is unavailable here. Use the barcode input below.',true);return;}
     if(!('BarcodeDetector' in window)){scannerStatus('Live barcode scanning is not supported by this browser. Use the barcode input below, or open this app in Chrome on Android.',true);return;}
     try{
-      barcodeDetector=new window.BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code']});
+      const wanted=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code'];const supported=typeof window.BarcodeDetector.getSupportedFormats==='function'?await window.BarcodeDetector.getSupportedFormats():wanted;const formats=wanted.filter(format=>supported.includes(format));if(!formats.length)throw new Error('No supported barcode formats.');barcodeDetector=new window.BarcodeDetector({formats});
       barcodeStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
       const video=$('barcodeVideo');if(!video)throw new Error('Camera preview is unavailable.');
       video.srcObject=barcodeStream;await video.play();if($('barcodeCameraWrap'))$('barcodeCameraWrap').hidden=false;
