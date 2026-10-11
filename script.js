@@ -2367,3 +2367,201 @@ if ('serviceWorker' in navigator) {
   if(date)date.textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   render();
 })();
+
+
+/* =========================================================
+   SALES INVOICES + PRODUCT INVENTORY (local-first MVP)
+========================================================= */
+(function initBusinessWorkspaces(){
+  const KEYS={products:'msme.products',sales:'msme.sales'};
+  const $=id=>document.getElementById(id);
+  const read=key=>{try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[];}catch(_){return [];}};
+  const save=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
+  const money=value=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(value)||0);
+  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+  let lines=[newLine()];
+  function newLine(){return {productId:'',qty:1,price:0};}
+  function products(){return read(KEYS.products);}
+  function sales(){return read(KEYS.sales);}
+  function status(message,isError=false){const el=$('invoiceFormStatus');if(el){el.textContent=message;el.classList.toggle('is-error',isError);}}
+  function setPage(page){
+    ['homePage','salesPage','inventoryPage','incomePage','insightsPage'].forEach(id=>{const el=$(id);if(el)el.hidden=id!==page+'Page';});
+    document.querySelectorAll('.msme-nav .nav-btn').forEach(btn=>{
+      const active=(page==='home'&&btn.dataset.page==='home')||(page==='sales'&&btn.dataset.msmeModule==='sale'&&!btn.classList.contains('nav-btn--add'))||(page==='inventory'&&btn.dataset.msmeModule==='inventory');
+      btn.classList.toggle('active',active);
+      if(active)btn.setAttribute('aria-current','page');else btn.removeAttribute('aria-current');
+    });
+    window.scrollTo({top:0,behavior:'smooth'});
+    if(page==='sales')renderSales();
+    if(page==='inventory')renderProducts();
+  }
+  function renderLineRows(){
+    const body=$('invoiceLines');if(!body)return;
+    const list=products();
+    body.innerHTML=lines.map((line,index)=>{
+      const chosen=list.find(p=>String(p.id)===String(line.productId));
+      const options='<option value="">Select product</option>'+list.map(p=>'<option value="'+esc(p.id)+'" '+(String(p.id)===String(line.productId)?'selected':'')+'>'+esc(p.name)+(p.sku?' · '+esc(p.sku):'')+'</option>').join('');
+      return '<tr data-line-index="'+index+'"><td><select class="invoice-product" aria-label="Invoice product">'+options+'</select></td><td class="invoice-available">'+(chosen?Number(chosen.stock||0)+' '+esc(chosen.unit||'pcs'):'—')+'</td><td><input class="invoice-qty" type="number" min="0.01" step="0.01" value="'+Math.max(.01,Number(line.qty)||1)+'" aria-label="Quantity"></td><td><input class="invoice-price" type="number" min="0" step="0.01" value="'+Math.max(0,Number(line.price)||0)+'" aria-label="Unit price"></td><td class="invoice-line-total">'+money((Number(line.qty)||0)*(Number(line.price)||0))+'</td><td><button type="button" class="msme-icon-btn remove-invoice-line" aria-label="Remove item" '+(lines.length===1?'disabled':'')+'>×</button></td></tr>';
+    }).join('');
+    const hint=$('invoiceStockHint');if(hint)hint.textContent=list.length?'Select products and quantities. Saving an invoice deducts the sold quantities from stock.':'Add at least one product in Inventory before creating an invoice.';
+    calculateInvoice();
+  }
+  function calculateInvoice(){
+    const subtotal=lines.reduce((sum,line)=>sum+Math.max(0,Number(line.qty)||0)*Math.max(0,Number(line.price)||0),0);
+    const discount=Math.min(subtotal,Math.max(0,Number($('invoiceDiscount')?.value)||0));
+    const total=Math.max(0,subtotal-discount);
+    const paid=Math.max(0,Number($('invoicePaid')?.value)||0);
+    if($('invoiceSubtotal'))$('invoiceSubtotal').textContent=money(subtotal);
+    if($('invoiceDiscountView'))$('invoiceDiscountView').textContent='−'+money(discount);
+    if($('invoiceTotal'))$('invoiceTotal').textContent=money(total);
+    if($('invoiceBalance'))$('invoiceBalance').textContent=money(Math.max(0,total-paid));
+    document.querySelectorAll('#invoiceLines tr').forEach((row,index)=>{const cell=row.querySelector('.invoice-line-total');if(cell&&lines[index])cell.textContent=money((Number(lines[index].qty)||0)*(Number(lines[index].price)||0));});
+    return {subtotal,discount,total,paid};
+  }
+  function renderProducts(){
+    const list=products(),query=String($('productSearch')?.value||'').trim().toLowerCase();
+    const filtered=list.filter(p=>(p.name+' '+(p.sku||'')+' '+(p.category||'')).toLowerCase().includes(query));
+    const units=list.reduce((sum,p)=>sum+Number(p.stock||0),0);
+    const cost=list.reduce((sum,p)=>sum+Number(p.stock||0)*Number(p.costPrice||0),0);
+    const low=list.filter(p=>Number(p.stock||0)<=Number(p.minStock??5));
+    if($('inventoryProductCount'))$('inventoryProductCount').textContent=list.length;
+    if($('inventoryUnitCount'))$('inventoryUnitCount').textContent=units.toLocaleString('en-IN');
+    if($('inventoryCostValue'))$('inventoryCostValue').textContent=money(cost);
+    if($('inventoryLowCount'))$('inventoryLowCount').textContent=low.length;
+    if($('productTableBody'))$('productTableBody').innerHTML=filtered.map(p=>{
+      const isLow=Number(p.stock||0)<=Number(p.minStock??5);
+      return '<tr><td><strong>'+esc(p.name)+'</strong><small class="msme-cell-sub">'+esc(p.category||'Uncategorised')+' · '+esc(p.unit||'pcs')+'</small></td><td>'+esc(p.sku||'—')+'</td><td>'+money(p.costPrice)+'</td><td>'+money(p.sellingPrice)+'</td><td>'+Number(p.stock||0)+'</td><td>'+money(Number(p.stock||0)*Number(p.costPrice||0))+'</td><td><span class="msme-tag '+(isLow?'msme-tag--warning':'msme-tag--ok')+'">'+(isLow?'Low stock':'In stock')+'</span></td><td><div class="msme-row-actions"><button type="button" class="msme-table-action" data-edit-product="'+esc(p.id)+'">Edit</button><button type="button" class="msme-table-action msme-table-action--danger" data-delete-product="'+esc(p.id)+'">Delete</button></div></td></tr>';
+    }).join('');
+    if($('productTableEmpty'))$('productTableEmpty').hidden=filtered.length>0;
+    if(window.LedgerMSME)window.LedgerMSME.render();
+    renderLineRows();
+  }
+  function renderSales(){
+    const list=sales(),query=String($('invoiceSearch')?.value||'').trim().toLowerCase();
+    const total=list.reduce((s,x)=>s+Number(x.total||0),0),due=list.reduce((s,x)=>s+Number(x.outstanding||0),0);
+    if($('salesModuleTotal'))$('salesModuleTotal').textContent=money(total);
+    if($('salesModuleCount'))$('salesModuleCount').textContent=list.length;
+    if($('salesModuleDue'))$('salesModuleDue').textContent=money(due);
+    const filtered=[...list].reverse().filter(x=>(String(x.invoice||'')+' '+String(x.customer||'')).toLowerCase().includes(query));
+    if($('invoiceHistory'))$('invoiceHistory').innerHTML=filtered.map(x=>{
+      const dueNow=Number(x.outstanding||0);
+      return '<tr><td><strong>'+esc(x.invoice)+'</strong></td><td>'+esc(x.date)+'</td><td>'+esc(x.customer||'Walk-in customer')+'</td><td>'+money(x.total)+'</td><td>'+money(x.paid)+'</td><td>'+money(dueNow)+'</td><td><span class="msme-tag '+(dueNow<=0?'msme-tag--ok':'msme-tag--warning')+'">'+(dueNow<=0?'Paid':Number(x.paid)>0?'Part paid':'Unpaid')+'</span></td><td><div class="msme-row-actions">'+(dueNow>0?'<button type="button" class="msme-table-action" data-mark-paid="'+esc(x.id)+'">Mark paid</button>':'')+'<button type="button" class="msme-table-action" data-print-invoice="'+esc(x.id)+'">Print</button></div></td></tr>';
+    }).join('');
+    if($('invoiceHistoryEmpty'))$('invoiceHistoryEmpty').hidden=filtered.length>0;
+  }
+  function resetProductForm(){
+    $('msmeProductForm')?.reset();if($('productEditId'))$('productEditId').value='';
+    if($('productFormHeading'))$('productFormHeading').textContent='Add product';
+    if($('saveProductBtn'))$('saveProductBtn').textContent='Save product';
+    if($('cancelProductEdit'))$('cancelProductEdit').hidden=true;
+    if($('productOpeningStock'))$('productOpeningStock').value='0';
+    if($('productMinStock'))$('productMinStock').value='5';
+  }
+  function resetInvoiceForm(){
+    $('msmeInvoiceForm')?.reset();lines=[newLine()];
+    if($('invoiceDate'))$('invoiceDate').value=today();
+    if($('invoicePaid'))$('invoicePaid').value='0';
+    if($('invoiceDiscount'))$('invoiceDiscount').value='0';
+    renderLineRows();status('');
+  }
+  function createInvoice(event){
+    event.preventDefault();
+    const list=products();
+    const used=lines.filter(line=>line.productId);
+    if(!used.length){status('Choose at least one product before saving.',true);return;}
+    const quantities={};
+    for(const line of used){
+      const product=list.find(p=>String(p.id)===String(line.productId));
+      const qty=Number(line.qty),price=Number(line.price);
+      if(!product){status('A selected product could not be found. Refresh the item list.',true);return;}
+      if(!Number.isFinite(qty)||qty<=0||!Number.isFinite(price)||price<0){status('Check each item quantity and price.',true);return;}
+      quantities[product.id]=(quantities[product.id]||0)+qty;
+    }
+    for(const [id,qty] of Object.entries(quantities)){
+      const product=list.find(p=>String(p.id)===String(id));
+      if(qty>Number(product.stock||0)){status('Not enough stock for '+product.name+'. Available: '+Number(product.stock||0)+'.',true);return;}
+    }
+    const totals=calculateInvoice();
+    if(totals.total<=0){status('Invoice total must be greater than zero.',true);return;}
+    if(totals.paid>totals.total){status('Amount received cannot be greater than the invoice total.',true);return;}
+    const customer=$('invoiceCustomer').value.trim()||'Walk-in customer';
+    const items=used.map(line=>{
+      const p=list.find(x=>String(x.id)===String(line.productId));
+      const qty=Number(line.qty),price=Number(line.price);
+      return {productId:p.id,productName:p.name,sku:p.sku||'',qty,unit:p.unit||'pcs',price,costPrice:Number(p.costPrice||0),lineTotal:qty*price};
+    });
+    const invoiceList=sales();
+    const date=$('invoiceDate').value||today();
+    const invoiceNo='INV-'+date.replaceAll('-','')+'-'+String(invoiceList.length+1).padStart(4,'0');
+    const invoice={id:'inv-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),invoice:invoiceNo,date,customer,paymentMethod:$('invoicePaymentMethod').value,items,subtotal:totals.subtotal,discount:totals.discount,total:totals.total,paid:totals.paid,outstanding:Math.max(0,totals.total-totals.paid),profit:items.reduce((s,x)=>s+(x.price-x.costPrice)*x.qty,0)-totals.discount};
+    items.forEach(item=>{const p=list.find(x=>String(x.id)===String(item.productId));p.stock=Number((Number(p.stock||0)-item.qty).toFixed(3));});
+    save(KEYS.products,list);invoiceList.push(invoice);save(KEYS.sales,invoiceList);
+    renderProducts();renderSales();if(window.LedgerMSME)window.LedgerMSME.render();
+    status('Invoice '+invoiceNo+' saved. Stock quantities have been updated.');
+    resetInvoiceForm();renderSales();
+  }
+  function printInvoice(id){
+    const inv=sales().find(x=>String(x.id)===String(id));if(!inv)return;
+    const rows=(inv.items||[]).map(item=>'<tr><td>'+esc(item.productName)+'</td><td>'+Number(item.qty)+'</td><td>'+money(item.price)+'</td><td>'+money(item.lineTotal)+'</td></tr>').join('');
+    const popup=window.open('','_blank','width=800,height=700');
+    if(!popup){alert('Allow pop-ups to print the invoice.');return;}
+    popup.document.write('<!doctype html><html><head><title>'+esc(inv.invoice)+'</title><meta name="viewport" content="width=device-width"><style>body{font:14px Arial,sans-serif;color:#223;padding:32px}h1{color:#1677d2}table{border-collapse:collapse;width:100%;margin-top:24px}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}th{background:#f3f7fb}.total{text-align:right;margin-top:22px;font-size:20px}</style></head><body><h1>LEDGER BUSINESS</h1><h2>Sales invoice</h2><p><b>Invoice:</b> '+esc(inv.invoice)+'<br><b>Date:</b> '+esc(inv.date)+'<br><b>Customer:</b> '+esc(inv.customer)+'</p><table><thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table><div class="total">Subtotal: '+money(inv.subtotal)+'<br>Discount: '+money(inv.discount)+'<br><b>Total: '+money(inv.total)+'</b><br>Paid: '+money(inv.paid)+'<br>Balance due: '+money(inv.outstanding)+'</div><script>window.onload=()=>window.print()<\/script></body></html>');
+    popup.document.close();
+  }
+  window.LedgerBusinessPages={open(module){setPage(module==='sale'?'sales':module==='product'||module==='inventory'?'inventory':'home');}};
+  document.addEventListener('click',event=>{
+    const t=event.target.closest('button');if(!t)return;
+    if(t.id==='focusNewInvoice'){setPage('sales');$('invoiceEditor')?.scrollIntoView({behavior:'smooth'});$('invoiceCustomer')?.focus();}
+    if(t.id==='focusAddProduct'){setPage('inventory');$('productEditor')?.scrollIntoView({behavior:'smooth'});$('productName')?.focus();}
+    if(t.id==='addInvoiceLine'){lines.push(newLine());renderLineRows();}
+    if(t.classList.contains('remove-invoice-line')){const row=t.closest('tr');if(row&&lines.length>1){lines.splice(Number(row.dataset.lineIndex),1);renderLineRows();}}
+    if(t.dataset.editProduct){
+      const p=products().find(x=>String(x.id)===String(t.dataset.editProduct));if(!p)return;
+      setPage('inventory');$('productEditId').value=p.id;$('productName').value=p.name||'';$('productSku').value=p.sku||'';$('productCategory').value=p.category||'';$('productUnit').value=p.unit||'pcs';$('productCost').value=Number(p.costPrice||0);$('productPrice').value=Number(p.sellingPrice||0);$('productOpeningStock').value=Number(p.stock||0);$('productMinStock').value=Number(p.minStock??5);$('productFormHeading').textContent='Edit product';$('saveProductBtn').textContent='Save changes';$('cancelProductEdit').hidden=false;$('productEditor').scrollIntoView({behavior:'smooth'});
+    }
+    if(t.dataset.deleteProduct){
+      const p=products().find(x=>String(x.id)===String(t.dataset.deleteProduct));if(!p)return;
+      if(sales().some(s=>(s.items||[]).some(i=>String(i.productId)===String(p.id)))){alert('This product appears on an invoice. Keep it in the catalogue so invoice history stays intact.');return;}
+      if(!confirm('Delete '+p.name+' from inventory?'))return;
+      save(KEYS.products,products().filter(x=>String(x.id)!==String(p.id)));renderProducts();
+    }
+    if(t.dataset.markPaid){
+      const list=sales(),inv=list.find(x=>String(x.id)===String(t.dataset.markPaid));if(!inv)return;
+      inv.paid=Number(inv.total||0);inv.outstanding=0;save(KEYS.sales,list);renderSales();if(window.LedgerMSME)window.LedgerMSME.render();
+    }
+    if(t.dataset.printInvoice)printInvoice(t.dataset.printInvoice);
+  });
+  $('msmeProductForm')?.addEventListener('submit',event=>{
+    event.preventDefault();
+    const list=products(),editId=$('productEditId').value,name=$('productName').value.trim(),sku=$('productSku').value.trim();
+    if(!name){$('productName').focus();return;}
+    if(sku&&list.some(p=>String(p.sku||'').toLowerCase()===sku.toLowerCase()&&String(p.id)!==String(editId))){$('productFormStatus').textContent='That SKU is already in use. Choose a unique item code.';return;}
+    const values={name,sku,category:$('productCategory').value.trim(),unit:$('productUnit').value,costPrice:Number($('productCost').value),purchasePrice:Number($('productCost').value),sellingPrice:Number($('productPrice').value),stock:Number($('productOpeningStock').value),minStock:Number($('productMinStock').value)};
+    if(Object.values(values).some(v=>typeof v==='number'&&(!Number.isFinite(v)||v<0))){$('productFormStatus').textContent='Prices and quantities must be zero or greater.';return;}
+    if(editId){const p=list.find(x=>String(x.id)===String(editId));if(!p)return;Object.assign(p,values);$('productFormStatus').textContent='Product updated.';}
+    else{values.id='prd-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);values.createdAt=new Date().toISOString();list.push(values);$('productFormStatus').textContent='Product added to inventory.';}
+    save(KEYS.products,list);resetProductForm();renderProducts();$('productFormStatus').textContent=editId?'Product updated.':'Product added to inventory.';
+  });
+  $('msmeInvoiceForm')?.addEventListener('submit',createInvoice);
+  $('addInvoiceLine')?.addEventListener('click',()=>{lines.push(newLine());renderLineRows();});
+  $('invoiceLines')?.addEventListener('change',event=>{
+    const row=event.target.closest('tr');if(!row)return;const index=Number(row.dataset.lineIndex),line=lines[index];if(!line)return;
+    if(event.target.classList.contains('invoice-product')){
+      line.productId=event.target.value;const p=products().find(x=>String(x.id)===String(line.productId));line.price=p?Number(p.sellingPrice||0):0;renderLineRows();
+    }else if(event.target.classList.contains('invoice-qty')){line.qty=Number(event.target.value);calculateInvoice();}
+    else if(event.target.classList.contains('invoice-price')){line.price=Number(event.target.value);calculateInvoice();}
+  });
+  $('invoiceLines')?.addEventListener('input',event=>{
+    const row=event.target.closest('tr');if(!row)return;const index=Number(row.dataset.lineIndex),line=lines[index];if(!line)return;
+    if(event.target.classList.contains('invoice-qty'))line.qty=Number(event.target.value);
+    if(event.target.classList.contains('invoice-price'))line.price=Number(event.target.value);
+    calculateInvoice();
+  });
+  $('invoiceDiscount')?.addEventListener('input',calculateInvoice);$('invoicePaid')?.addEventListener('input',calculateInvoice);
+  $('productSearch')?.addEventListener('input',renderProducts);$('invoiceSearch')?.addEventListener('input',renderSales);
+  $('cancelProductEdit')?.addEventListener('click',resetProductForm);
+  $('msmeInvoiceForm')?.addEventListener('reset',()=>setTimeout(resetInvoiceForm,0));
+  $('invoiceDate')&&($('invoiceDate').value=today());
+  renderProducts();renderSales();renderLineRows();
+})();
