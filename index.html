@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Ledger Business — MSME Management</title>
-  <link rel="stylesheet" href="style.css?v=ledger-simple-premium-20261011">
+  <link rel="stylesheet" href="style.css?v=ledger-barcode-20261011">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1677d2">
   <meta name="mobile-web-app-capable" content="yes">
@@ -376,7 +376,13 @@
         <div class="msme-field"><label for="invoiceCustomer">Customer name <span class="msme-optional">(optional)</span></label><input id="invoiceCustomer" maxlength="100" placeholder="Walk-in customer"></div>
         <div class="msme-field"><label for="invoicePaid">Amount received (₹)</label><input id="invoicePaid" type="number" min="0" step="0.01" value="0" inputmode="decimal"></div>
       </div>
-      <div class="msme-table-heading"><h3>Items</h3><button type="button" class="msme-secondary-btn" id="addInvoiceLine">+ Add item</button></div>
+      <div class="msme-table-heading msme-billing-toolbar"><h3>Items</h3><div class="msme-billing-tools"><button type="button" class="msme-secondary-btn" id="openBarcodeScanner">▦ Scan barcode</button><button type="button" class="msme-secondary-btn" id="addInvoiceLine">+ Add item</button></div></div>
+      <section class="msme-scanner-panel" id="barcodeScannerPanel" hidden aria-label="Barcode scanner">
+        <div class="msme-scanner-top"><div><strong>Scan an item barcode</strong><p>Point your camera at the barcode. The matching item will be added to this bill.</p></div><button type="button" class="msme-icon-btn" id="closeBarcodeScanner" aria-label="Close scanner">×</button></div>
+        <div class="msme-scanner-camera-wrap" id="barcodeCameraWrap" hidden><video id="barcodeVideo" playsinline muted aria-label="Live barcode camera"></video><span class="msme-scanner-guide" aria-hidden="true"></span></div>
+        <p class="msme-scanner-status" id="barcodeScannerStatus" aria-live="polite">Start the camera or enter the barcode below.</p>
+        <form class="msme-barcode-manual" id="barcodeManualForm"><label for="barcodeManualInput">Barcode / item code</label><div><input id="barcodeManualInput" autocomplete="off" autocapitalize="off" placeholder="Scan with a USB scanner or type code" required><button type="submit" class="msme-primary-btn">Add item</button></div></form>
+      </section>
       <div class="msme-table-wrap msme-bill-table"><table class="msme-data-table"><thead><tr><th>Item</th><th>Available</th><th>Qty</th><th>Rate (₹)</th><th>Amount</th><th></th></tr></thead><tbody id="invoiceLines"></tbody></table></div>
       <p class="msme-form-hint" id="invoiceStockHint">Add items in Inventory first.</p>
       <div class="msme-invoice-bottom msme-billing-total">
@@ -398,6 +404,7 @@
       <div class="msme-form-grid">
         <div class="msme-field"><label for="productName">Item name *</label><input id="productName" maxlength="120" placeholder="e.g. Mineral water 1L" required></div>
         <div class="msme-field"><label for="productSku">Item code *</label><input id="productSku" maxlength="60" placeholder="e.g. WAT-001" required></div>
+        <div class="msme-field"><label for="productBarcode">Barcode <span class="msme-optional">(optional)</span></label><input id="productBarcode" maxlength="100" placeholder="Scan code printed on the product" inputmode="numeric"></div>
         <div class="msme-field"><label for="productCost">Purchase rate per piece (₹) *</label><input id="productCost" type="number" min="0" step="0.01" placeholder="Your supplier's rate" inputmode="decimal" required></div>
         <div class="msme-field"><label for="productPrice">Selling rate per piece (₹) *</label><input id="productPrice" type="number" min="0" step="0.01" placeholder="Your selling price" inputmode="decimal" required></div>
         <div class="msme-field"><label for="productOpeningStock">Stock quantity *</label><input id="productOpeningStock" type="number" min="0" step="1" value="0" inputmode="numeric" required></div>
@@ -422,7 +429,7 @@
 
   </div>
 
-  <script src="script.js?v=ledger-simple-premium-20261011"></script>
+  <script src="script.js?v=ledger-barcode-20261011"></script>
 </body>
 </html>
       
