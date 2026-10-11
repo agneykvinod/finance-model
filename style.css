@@ -2795,3 +2795,89 @@ body{
   .msme-stock-summary strong{font-size:.9rem!important}
   .msme-chart{min-height:220px!important}
 }
+
+
+/* SALES, INVOICES & INVENTORY WORKSPACES */
+.msme-workspace{max-width:1500px;margin:0 auto;gap:20px}
+.msme-page-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 2px}
+.msme-page-heading h1{font-size:1.8rem;letter-spacing:-.04em;margin:6px 0;color:#202b3c}
+.msme-page-heading p{margin:6px 0 0;color:#718096;font-size:.82rem;line-height:1.5}
+.msme-primary-btn,.msme-secondary-btn{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:10px 15px;
+ border-radius:7px;font:inherit;font-size:.8rem;font-weight:650;cursor:pointer;transition:background .15s ease,border-color .15s ease;
+}
+.msme-primary-btn{background:#1677d2;color:#fff;border:1px solid #1677d2}
+.msme-primary-btn:hover{background:#0b65b7;border-color:#0b65b7}
+.msme-secondary-btn{background:#fff;color:#43536a;border:1px solid #d9e2ec}
+.msme-secondary-btn:hover{background:#f4f8fc;border-color:#b9cfe5}
+.msme-module-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.msme-module-stats article{min-width:0;padding:16px 18px;border:1px solid #dfe6ee;border-radius:9px;background:#fff;box-shadow:0 1px 3px rgba(24,48,78,.035);display:flex;flex-direction:column;gap:9px}
+.msme-module-stats article span{font-size:.75rem;color:#77869a}
+.msme-module-stats article strong{font-size:1.35rem;letter-spacing:-.03em;color:#25354a;overflow-wrap:anywhere}
+.msme-form-panel{scroll-margin-top:85px}
+.msme-status-pill{padding:5px 9px;border-radius:5px;background:#eef6ff;color:#1677d2;font-size:.68rem;font-weight:650}
+.msme-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 18px}
+.msme-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.msme-field label{font-size:.76rem;font-weight:600;color:#4d5d72!important}
+.msme-field input,.msme-field select,.msme-search,#invoiceLines input,#invoiceLines select{
+ width:100%;min-width:0;min-height:40px;padding:9px 11px;border:1px solid #d7e1ec!important;border-radius:6px!important;
+ background:#fff!important;color:#26364a!important;font:inherit;font-size:.8rem;outline:none;
+}
+.msme-field input:focus,.msme-field select:focus,.msme-search:focus,#invoiceLines input:focus,#invoiceLines select:focus{border-color:#6ba9e7!important;box-shadow:0 0 0 3px rgba(22,119,210,.1)}
+.msme-table-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 12px}
+.msme-table-heading h3{margin:0;font-size:.9rem;color:#2b3b50}
+.msme-table-wrap{width:100%;overflow-x:auto;border:1px solid #e3eaf2;border-radius:7px}
+.msme-data-table{width:100%;border-collapse:collapse;min-width:760px;font-size:.76rem}
+.msme-data-table th{padding:12px 13px;background:#f5f8fc;color:#66778d;font-size:.67rem;font-weight:700;text-align:left;white-space:nowrap;border-bottom:1px solid #e2e9f1}
+.msme-data-table td{padding:12px 13px;border-bottom:1px solid #edf1f6;color:#43536a;vertical-align:middle;white-space:nowrap}
+.msme-data-table tbody tr:last-child td{border-bottom:0}
+.msme-data-table tbody tr:hover{background:#fafcff}
+.msme-data-table td strong{display:block;color:#2b3b50;font-weight:650}
+.msme-cell-sub{display:block;color:#8a97a7;font-size:.67rem;margin-top:4px}
+.msme-data-table input,.msme-data-table select{width:100%;min-width:70px;min-height:34px;padding:6px 7px;border:1px solid #dce5ef!important;border-radius:5px!important;background:#fff!important;color:#2b3b50!important;font:inherit}
+.msme-data-table #invoiceLines td:first-child{min-width:180px}
+#invoiceLines td:nth-child(2){color:#718096}
+#invoiceLines td:nth-child(5){font-weight:650;color:#2b3b50}
+.msme-icon-btn{width:29px;height:29px;border:1px solid #e0e7ef;border-radius:5px;background:#fff;color:#78869a;font-size:1.2rem;cursor:pointer}
+.msme-icon-btn:disabled{opacity:.3;cursor:not-allowed}
+.msme-form-hint{margin:10px 0 0;color:#8190a3;font-size:.72rem;line-height:1.5}
+.msme-form-hint.is-error{color:#c0392b}
+.msme-invoice-bottom{display:grid;grid-template-columns:minmax(180px,1fr) minmax(230px,.8fr);gap:25px;align-items:start;margin-top:22px}
+.msme-discount-field{max-width:280px}
+.msme-totals{display:flex;flex-direction:column;gap:11px}
+.msme-totals>div{display:flex;align-items:center;justify-content:space-between;gap:18px;font-size:.78rem;color:#718096}
+.msme-totals strong{color:#3a4b60;font-weight:650;white-space:nowrap}
+.msme-totals .msme-total-row{padding:12px 0;border-top:1px solid #e1e8f0;border-bottom:1px solid #e1e8f0;color:#25354a;font-weight:700}
+.msme-totals .msme-total-row strong{font-size:1.15rem;color:#1677d2}
+.msme-form-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap}
+.msme-search{max-width:250px}
+.msme-table-empty{padding:16px 5px 0;color:#8996a6;font-size:.76rem}
+.msme-table-empty[hidden]{display:none}
+.msme-tag{display:inline-flex;align-items:center;padding:5px 7px;border-radius:5px;font-size:.65rem;font-weight:700}
+.msme-tag--ok{background:#e8f7ef;color:#18824d}
+.msme-tag--warning{background:#fff3df;color:#a76813}
+.msme-row-actions{display:flex;align-items:center;gap:7px}
+.msme-table-action{padding:5px 7px;border:1px solid #dbe6f0;border-radius:5px;background:#fff;color:#1677d2;font:inherit;font-size:.68rem;font-weight:650;cursor:pointer}
+.msme-table-action:hover{background:#edf6ff}
+.msme-table-action--danger{color:#b54747;border-color:#f0dddd}
+.msme-table-action--danger:hover{background:#fff4f4}
+@media(max-width:900px){
+ .msme-module-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .msme-page-heading h1{font-size:1.55rem}
+}
+@media(max-width:600px){
+ .msme-page-heading{align-items:flex-start;flex-direction:column}
+ .msme-page-heading>.msme-primary-btn{width:100%}
+ .msme-module-stats{gap:8px}
+ .msme-module-stats article{padding:12px}
+ .msme-module-stats article span{font-size:.68rem}
+ .msme-module-stats article strong{font-size:1.12rem}
+ .msme-form-grid{grid-template-columns:1fr;gap:13px}
+ .msme-invoice-bottom{grid-template-columns:1fr;gap:18px}
+ .msme-discount-field{max-width:none}
+ .msme-form-actions{align-items:stretch;flex-direction:column-reverse}
+ .msme-form-actions button{width:100%}
+ .msme-section-heading{align-items:flex-start;flex-wrap:wrap}
+ .msme-search{max-width:none;width:100%}
+ .msme-data-table{font-size:.72rem}
+}
