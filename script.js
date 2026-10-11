@@ -2544,7 +2544,6 @@ if ('serviceWorker' in navigator) {
     save(KEYS.products,list);resetProductForm();renderProducts();$('productFormStatus').textContent=editId?'Product updated.':'Product added to inventory.';
   });
   $('msmeInvoiceForm')?.addEventListener('submit',createInvoice);
-  $('addInvoiceLine')?.addEventListener('click',()=>{lines.push(newLine());renderLineRows();});
   $('invoiceLines')?.addEventListener('change',event=>{
     const row=event.target.closest('tr');if(!row)return;const index=Number(row.dataset.lineIndex),line=lines[index];if(!line)return;
     if(event.target.classList.contains('invoice-product')){
@@ -2561,7 +2560,7 @@ if ('serviceWorker' in navigator) {
   $('invoiceDiscount')?.addEventListener('input',calculateInvoice);$('invoicePaid')?.addEventListener('input',calculateInvoice);
   $('productSearch')?.addEventListener('input',renderProducts);$('invoiceSearch')?.addEventListener('input',renderSales);
   $('cancelProductEdit')?.addEventListener('click',resetProductForm);
-  $('msmeInvoiceForm')?.addEventListener('reset',()=>setTimeout(resetInvoiceForm,0));
+  $('msmeInvoiceForm')?.addEventListener('reset',()=>setTimeout(()=>{lines=[newLine()];if($('invoiceDate'))$('invoiceDate').value=today();if($('invoicePaid'))$('invoicePaid').value='0';if($('invoiceDiscount'))$('invoiceDiscount').value='0';renderLineRows();status('');},0));
   $('invoiceDate')&&($('invoiceDate').value=today());
   renderProducts();renderSales();renderLineRows();
 })();
